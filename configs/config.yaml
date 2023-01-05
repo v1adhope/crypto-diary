@@ -1,0 +1,6 @@
+storage:
+  username: designer
+  password:
+  host: localhost
+  port: 5432
+  database: crypto-diary-db
