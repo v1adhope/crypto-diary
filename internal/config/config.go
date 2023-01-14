@@ -1,35 +1,53 @@
+// NOTE: SINGELTON
 package config
 
 import (
-	"github.com/pkg/errors"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/spf13/viper"
-	"github.com/v1adhope/crypto-diary/pkg/postgres"
 )
 
 type Config struct {
-	Storage postgres.StorageConfig
+	Server struct {
+		Address         string        `yaml:"address"`
+		ShutdownTimeout time.Duration `yaml:"shutdownTimeout"`
+	} `yaml:"server"`
+
+	Storage struct {
+		Username     string        `yaml:"username"`
+		Password     string        `yaml:"password"`
+		Host         string        `yaml:"host"`
+		Port         string        `yaml:"port"`
+		Database     string        `yaml:"database"`
+		ConnAttempts int           `yaml:"connAttempts"`
+		ConnTimeout  time.Duration `yaml:"connTimeout"`
+	} `yaml:"storage"`
 }
 
 var (
-	configName = "config"
-	configType = "yaml"
-	configPath = "./configs"
-	c          Config
+	cfgName = "config"
+	cfgType = "yaml"
+	cfgPath = "./configs"
+	once    sync.Once
+	cfg     *Config
 )
 
-// TODO: add logger
-func GetConfig() (*Config, error) {
-	viper.SetConfigName(configName)
-	viper.SetConfigType(configType)
-	viper.AddConfigPath(configPath)
+func GetConfig() *Config {
+	once.Do(
+		func() {
+			viper.SetConfigName(cfgName)
+			viper.SetConfigType(cfgType)
+			viper.AddConfigPath(cfgPath)
 
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, errors.Wrap(err, "could not read config file")
-	}
+			if err := viper.ReadInConfig(); err != nil {
+				log.Fatalf("could not read config file: %v", err)
+			}
 
-	if err := viper.Unmarshal(&c); err != nil {
-		return nil, errors.Wrap(err, "could not decode config file into struct")
-	}
-
-	return &c, nil
+			if err := viper.Unmarshal(&cfg); err != nil {
+				log.Fatalf("could not decode config file into struct: %v", err)
+			}
+		})
+	return cfg
 }

@@ -1,13 +1,25 @@
 services:
+  app:
+    build: .
+    container_name: crypto-diary-app
+    image: crypto-diary-app
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+
   postgres:
     image: postgres:14.6
     restart: always
     container_name: crypto-diary-db
     environment:
-      POSTGRES_DB: crypto-diary-db
+      POSTGRES_DB: crypto-diary
       POSTGRES_USER: designer
-      POSTGRES_PASSWORD: true
+      POSTGRES_PASSWORD: designer
     volumes:
       - ./scripts:/docker-entrypoint-initdb.d
     ports:
       - 5432:5432
+networks:
+  default:
+    name: crypto-diary

@@ -1,6 +1,11 @@
+server:
+  address: :8080
+  shutdownTimeout: 0 # in seconds
 storage:
   username: designer
-  password:
-  host: localhost
+  password: designer
+  host: postgres
   port: 5432
-  database: crypto-diary-db
+  database: crypto-diary
+  connAttempts: 10
+  connTimeout: 1 # in seconds

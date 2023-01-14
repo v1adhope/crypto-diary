@@ -1,22 +1,22 @@
 .SILENT:
 
-run: build
-	./.bin/main
-
 build: mod verify
 	go build -o .bin/main ./cmd/app
+
 mod:
 	go mod tidy -v
 
 verify:
 	go mod verify
 
-# Test docker network
-n-run:
-	docker compose up -d
+run: compose-build
+	docker compose  up
 
-n-stop:
-	docker compose down
+stop:
+	docker compose  down
 
-n-restart:
-	docker compose restart
+restart:
+	docker compose  restart
+
+compose-build: build
+	docker compose  build
