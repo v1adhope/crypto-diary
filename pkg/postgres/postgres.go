@@ -6,29 +6,31 @@ import (
 	"log"
 	"time"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/v1adhope/crypto-diary/internal/config"
 )
 
 // TODO: ???
-type Client interface {
-	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
-	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
-}
+// type Client interface {
+// 	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+// 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+// 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+// }
 
 type Postgres struct {
 	connAttempts int
 	connTimeout  time.Duration
-	Pool         *pgxpool.Pool
+	poolsize     int32
+
+	Pool *pgxpool.Pool
 }
 
-func NewClient(cfg *config.Config) (*pgxpool.Pool, error) {
+// TODO: Separate configure
+func NewClient(cfg *config.Config) (*Postgres, error) {
 	pg := &Postgres{
 		connAttempts: cfg.Storage.ConnAttempts,
 		connTimeout:  cfg.Storage.ConnTimeout,
+		poolsize:     cfg.Storage.PoolSize,
 	}
 	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", cfg.Storage.Username, cfg.Storage.Password, cfg.Storage.Host, cfg.Storage.Port, cfg.Storage.Database)
 
@@ -36,6 +38,8 @@ func NewClient(cfg *config.Config) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("postgres: parse config failed: %s", err)
 	}
+
+	poolCfg.MaxConns = pg.poolsize
 
 	pg.Pool, err = pgxpool.NewWithConfig(context.Background(), poolCfg)
 	if err != nil {
@@ -58,5 +62,11 @@ func NewClient(cfg *config.Config) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection pool: %s", err)
 	}
-	return pg.Pool, nil
+	return pg, nil
+}
+
+func (p *Postgres) Close() {
+	if p.Pool != nil {
+		p.Pool.Close()
+	}
 }

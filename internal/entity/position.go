@@ -6,9 +6,11 @@ import (
 )
 
 type Position struct {
-	PositionID      string `json:"positionID"`
+	ID              string `json:"ID"`
 	OpenDate        string `json:"openDate"`
 	Pair            string `json:"pair"`
+	Reason          string `json:"reason"`
+	AccordingToPlan string `json:"accordingToPlan"`
 	Risk            string `json:"risk"`
 	Direction       string `json:"direction"`
 	Deposit         string `json:"deposit"`
@@ -16,7 +18,7 @@ type Position struct {
 	StopLossPrice   string `json:"stopLossPrice"`
 	TakeProfitPrice string `json:"takeProfitPrice"`
 	ClosePrice      string `json:"closePrice"`
-	User            User   `json:"user"`
+	UserID          string `json:"userID"`
 }
 
 func (u *Position) ValidPosition() error {
@@ -24,6 +26,15 @@ func (u *Position) ValidPosition() error {
 
 	if len(u.Pair) > 12 || len(u.Pair) < 3 {
 		errBuff = fmt.Errorf("ticker does not exist:")
+	}
+
+	if u.Reason == "" {
+		errBuff = fmt.Errorf("%s specify the reason:", errBuff)
+	}
+
+	_, err := strconv.ParseBool(u.AccordingToPlan)
+	if err != nil {
+		errBuff = fmt.Errorf("%s according to plan true of false:", errBuff)
 	}
 
 	risk, err := strconv.ParseFloat(u.Risk, 64)

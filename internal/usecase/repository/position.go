@@ -4,78 +4,114 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/internal/usecase"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"
 )
 
-const defaultEntityCap = 25
+const (
+	defaultEntityCap = 25
+	timeModel        = "2006-01-02"
+)
 
 type PositionRepo struct {
-	postgres.Client
+	*postgres.Postgres
 }
 
-// TODO: VALIDATION AND CLEAN AND PASSWORD JWT
-func (pr *PositionRepo) Create(ctx context.Context, user *entity.User) error {
-	q := `INSERT INTO users(email, password)
-        VALUES($1, $2)
-        RETURNING user_id`
+func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) error {
+	q := `INSERT INTO positions(open_date, pair, reason, according_to_plan, percentage_risk,
+                             direction, deposit, open_price, stop_loss_price,
+                             take_profit_price, close_price, user_id)
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        RETURNING position_id`
 
-	err := pr.QueryRow(ctx, q, user.Email, user.Password).Scan(&user.UserID)
+	err := pr.Pool.QueryRow(ctx, q,
+		position.OpenDate,
+		position.Pair,
+		position.Reason,
+		position.AccordingToPlan,
+		position.Risk,
+		position.Direction,
+		position.Deposit,
+		position.OpenPrice,
+		position.StopLossPrice,
+		position.TakeProfitPrice,
+		position.ClosePrice,
+		position.UserID).Scan(&position.ID)
 	if err != nil {
-		return fmt.Errorf("sql request: Create: %s", err)
+		return fmt.Errorf("sql request: Create position: QueryRow: %s", err)
 	}
 
 	return nil
 }
 
-func (pr *PositionRepo) FindAll(ctx context.Context) ([]entity.User, error) {
-	q := `SELECT user_id, email
-        FROM users`
+func (pr *PositionRepo) FindAll(ctx context.Context) ([]entity.Position, error) {
+	q := `SELECT * FROM all_positions`
 
-	rows, err := pr.Query(ctx, q)
+	rows, err := pr.Pool.Query(ctx, q)
 	if err != nil {
-		return nil, fmt.Errorf("sql request: FinAll %s", err)
+		return nil, fmt.Errorf("sql request: FinAll positions: Query: %s", err)
 	}
 	defer rows.Close()
 
-	users := make([]entity.User, 0, defaultEntityCap)
+	positions := make([]entity.Position, 0, defaultEntityCap)
 
 	for rows.Next() {
-		u := entity.User{}
+		//TODO: Create DTO???
+		var (
+			p               entity.Position
+			openDate        pgtype.Date
+			accordingToPlan bool
+			closePrice      pgtype.Text
+		)
 
-		err := rows.Scan(&u.UserID, &u.Email)
+		err := rows.Scan(
+			&p.ID,
+			&openDate,
+			&p.Pair,
+			&p.Reason,
+			&accordingToPlan,
+			&p.Risk,
+			&p.Direction,
+			&p.Deposit,
+			&p.OpenPrice,
+			&p.StopLossPrice,
+			&p.TakeProfitPrice,
+			&closePrice,
+			&p.UserID)
 		if err != nil {
-			return nil, fmt.Errorf("sql request: FinAll %s", err)
+			return nil, fmt.Errorf("sql request: FindAll positons: Scan: %s", err)
 		}
 
-		users = append(users, u)
+		p.OpenDate = fmt.Sprintf("%s", openDate.Time.Format(timeModel))
+		p.AccordingToPlan = fmt.Sprintf("%t", accordingToPlan)
+		if closePrice.Valid {
+			p.ClosePrice = fmt.Sprintf("%s", closePrice.String)
+		}
+
+		positions = append(positions, p)
 	}
 
-	return users, nil
+	return positions, nil
 }
 
-// TODO: return * or value
-func (pr *PositionRepo) FindOne(ctx context.Context, email string) (*entity.User, error) {
-	q := `SELECT user_id, email
-        FROM users
-        WHERE email = $1`
+// TODO: commandTag
+func (pr *PositionRepo) Delete(ctx context.Context, ID *string) error {
+	q := `DELETE FROM positions
+        WHERE position_id = $1`
 
-	user := entity.User{}
-
-	err := pr.QueryRow(ctx, q, email).Scan(&user.UserID, &user.Email)
+	commandTag, err := pr.Pool.Exec(ctx, q, ID)
 	if err != nil {
-		return nil, fmt.Errorf("sql request: FinOne: %s", err)
+		return fmt.Errorf("sql request: Delete positons: Scan: %s", err)
+	}
+	if commandTag.RowsAffected() != 1 {
+		return fmt.Errorf("No row found to delete")
 	}
 
-	return &user, nil
+	return nil
 }
 
-// TODO
-func (pr *PositionRepo) Delete(ctx context.Context) error {
-	panic("implement me")
-}
-
-func New(client postgres.Client) usecase.PositionRepo {
-	return &PositionRepo{client}
+func NewPosition(pg *postgres.Postgres) usecase.PositionRepo {
+	return &PositionRepo{pg}
 }

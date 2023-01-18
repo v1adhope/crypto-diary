@@ -23,6 +23,7 @@ type Config struct {
 		Database     string        `yaml:"database"`
 		ConnAttempts int           `yaml:"connAttempts"`
 		ConnTimeout  time.Duration `yaml:"connTimeout"`
+		PoolSize     int32         `yaml:"poolSize"`
 	} `yaml:"storage"`
 }
 

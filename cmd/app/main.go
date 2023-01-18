@@ -4,16 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/v1adhope/crypto-diary/internal/config"
+	v1 "github.com/v1adhope/crypto-diary/internal/controller/http/v1"
 	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/internal/usecase/repository"
+	"github.com/v1adhope/crypto-diary/pkg/httpserver"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"
 )
 
@@ -27,65 +24,78 @@ func main() {
 	}
 	defer pgClient.Close()
 
-	//NOTE: pg test
-	repo := repository.New(pgClient)
+	//TODO: pg test
+	positionRepo := repository.NewPosition(pgClient)
 
-	a := entity.User{
-		Email:    "nnn",
-		Password: "aldfjad",
+	// NOTE: Position
+	p := &entity.Position{
+		OpenDate:        "2023.01.17",
+		Pair:            "btc/usdt",
+		Risk:            "1",
+		Reason:          "Some reason",
+		AccordingToPlan: "true",
+		Direction:       "short",
+		Deposit:         "100",
+		OpenPrice:       "20000",
+		StopLossPrice:   "19000",
+		TakeProfitPrice: "23000",
+		ClosePrice:      "23000",
+		UserID:          "1",
 	}
-	err = repo.Create(context.Background(), &a)
+	p.ValidPosition()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(a)
-
-	users := make([]entity.User, 0)
-	users, err = repo.FindAll(context.Background())
+	err = positionRepo.Create(context.Background(), p)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(users)
+	fmt.Println(p)
 
-	user := &entity.User{}
-	user, err = repo.FindOne(context.Background(), "google@gmail.com")
+	id := "3"
+	err = positionRepo.Delete(context.Background(), &id)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(user)
 
-	//TODO: handlers, route replace
-	router := gin.Default()
+	positions := make([]entity.Position, 0)
+	positions, err = positionRepo.FindAll(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(positions)
 
-	router.GET("/")
+	//NOTE: User
+	userRepo := repository.NewUser(pgClient)
 
-	srv := &http.Server{
-		Addr:         cfg.Server.Address,
-		Handler:      router,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+	u := &entity.User{
+		Email:    "custom@custom.cu",
+		Password: "password",
+	}
+	err = userRepo.CreateUser(context.Background(), u)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal("listen:", err)
-		}
-	}()
-
-	// Graceful shutdown
-	quit := make(chan os.Signal)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("shutdown server ...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("server shutdown:", err)
+	u2 := &entity.User{}
+	email := "google@gmail.com"
+	passwd := "password1"
+	u2, err = userRepo.GetUser(context.Background(), &email, &passwd)
+	if err != nil {
+		log.Fatal(err)
 	}
-	select {
-	case <-ctx.Done():
-		log.Printf("timeout of %d seconds", cfg.Server.ShutdownTimeout)
-	}
-	log.Println("server exiting")
+	fmt.Println(u2)
+
+	// user := &entity.User{}
+	// user, err = repo.FindOne(context.Background(), "google@gmail.com")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println(user)
+
+	// TODO
+	handler := gin.Default()
+	v1.NewRouter(handler)
+
+	httpserver.New(handler, cfg)
 }

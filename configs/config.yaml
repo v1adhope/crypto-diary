@@ -9,3 +9,4 @@ storage:
   database: crypto-diary
   connAttempts: 10
   connTimeout: 1 # in seconds
+  poolSize: 1
