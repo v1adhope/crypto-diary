@@ -5,10 +5,14 @@ go 1.19
 require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/jackc/pgx/v5 v5.2.0
+	github.com/rs/zerolog v1.28.0
 	github.com/spf13/viper v1.14.0
 )
 
-require github.com/go-playground/locales v0.14.0 // indirect
+require (
+	github.com/go-playground/locales v0.14.0 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+)
 
 require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect

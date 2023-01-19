@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/v1adhope/crypto-diary/internal/config"
@@ -11,16 +10,18 @@ import (
 	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/internal/usecase/repository"
 	"github.com/v1adhope/crypto-diary/pkg/httpserver"
+	"github.com/v1adhope/crypto-diary/pkg/logger"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"
 )
 
 // TODO: add logger
 func main() {
 	cfg := config.GetConfig()
+	logger := logger.New(cfg.DebugLVL)
 
 	pgClient, err := postgres.NewClient(cfg)
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatal().Err(err).Send()
 	}
 	defer pgClient.Close()
 
@@ -44,24 +45,24 @@ func main() {
 	}
 	p.ValidPosition()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal().Err(err).Send()
 	}
 	err = positionRepo.Create(context.Background(), p)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal().Err(err).Send()
 	}
 	fmt.Println(p)
 
 	id := "3"
 	err = positionRepo.Delete(context.Background(), &id)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal().Err(err).Send()
 	}
 
 	positions := make([]entity.Position, 0)
 	positions, err = positionRepo.FindAll(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal().Err(err).Send()
 	}
 	fmt.Println(positions)
 
@@ -74,7 +75,8 @@ func main() {
 	}
 	err = userRepo.CreateUser(context.Background(), u)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal().Err(err).Send()
+
 	}
 
 	u2 := &entity.User{}
@@ -82,7 +84,7 @@ func main() {
 	passwd := "password1"
 	u2, err = userRepo.GetUser(context.Background(), &email, &passwd)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal().Err(err).Send()
 	}
 	fmt.Println(u2)
 
@@ -95,7 +97,7 @@ func main() {
 
 	// TODO
 	handler := gin.Default()
-	v1.NewRouter(handler)
+	v1.NewRouter(handler, logger)
 
 	httpserver.New(handler, cfg)
 }

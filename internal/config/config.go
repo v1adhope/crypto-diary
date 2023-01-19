@@ -10,6 +10,8 @@ import (
 )
 
 type Config struct {
+	DebugLVL string `yaml:"debugLVL"`
+
 	Server struct {
 		Address         string        `yaml:"address"`
 		ShutdownTimeout time.Duration `yaml:"shutdownTimeout"`

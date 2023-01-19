@@ -14,6 +14,7 @@ import (
 
 // TODO: Decomposition
 // TODO: Separate configure
+// TODO: Logger
 func New(handler http.Handler, cfg *config.Config) {
 	srv := &http.Server{
 		Addr:         cfg.Server.Address,
