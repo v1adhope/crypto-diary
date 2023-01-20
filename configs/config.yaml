@@ -1,13 +1,13 @@
-debugLVL: info
+log_level: info
 server:
-  address: :8080
-  shutdownTimeout: 0 # in seconds
+  socket: 0.0.0.0:8080
+  shutdown_timeout: 0 # in seconds
 storage:
   username: designer
   password: designer
   host: postgres
   port: 5432
   database: crypto-diary
-  connAttempts: 10
-  connTimeout: 1 # in seconds
-  poolSize: 1
+  conn_attempts: 10
+  conn_timeout: 1 # in seconds
+  pool_size: 1

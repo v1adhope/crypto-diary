@@ -61,4 +61,7 @@ VALUES
 INSERT INTO positions(pair, reason, percentage_risk, direction, deposit, open_price, stop_loss_price, take_profit_price, close_price, user_id)
 VALUES
 ('btc/usdt', 'some reason1', 1, 'long', 100, 20000, 19000, 23000, null, 1),
-('btc/usdt', 'some reason2', 3, 'short', 300, 12000, 13000, 10000, 10000, 3);
+('btc/usdt', 'some reason2', 3, 'short', 300, 12000, 13000, 10000, 10000, 3),
+('btc/usdt', 'some reason3', 1, 'long', 100, 20000, 19000, 23000, null, 1),
+('btc/usdt', 'some reason4', 1, 'short', 200, 15000, 16000, 11000, 11000, 1),
+('btc/usdt', 'some reason5', 1, 'long', 500, 22000, 21000, 25000, null, 1);

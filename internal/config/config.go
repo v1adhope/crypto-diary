@@ -10,23 +10,23 @@ import (
 )
 
 type Config struct {
-	DebugLVL string `yaml:"debugLVL"`
+	LogLevel string `mapstructure:"log_level"`
 
 	Server struct {
-		Address         string        `yaml:"address"`
-		ShutdownTimeout time.Duration `yaml:"shutdownTimeout"`
-	} `yaml:"server"`
+		Address         string        `mapstructure:"socket"`
+		ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
+	} `mapstructure:"server"`
 
 	Storage struct {
-		Username     string        `yaml:"username"`
-		Password     string        `yaml:"password"`
-		Host         string        `yaml:"host"`
-		Port         string        `yaml:"port"`
-		Database     string        `yaml:"database"`
-		ConnAttempts int           `yaml:"connAttempts"`
-		ConnTimeout  time.Duration `yaml:"connTimeout"`
-		PoolSize     int32         `yaml:"poolSize"`
-	} `yaml:"storage"`
+		Username     string        `mapstructure:"username"`
+		Password     string        `mapstructure:"password"`
+		Host         string        `mapstructure:"host"`
+		Port         string        `mapstructure:"port"`
+		Database     string        `mapstructure:"database"`
+		ConnAttempts int           `mapstructure:"conn_attempts"`
+		ConnTimeout  time.Duration `mapstructure:"conn_timeout"`
+		PoolSize     int32         `mapstructure:"pool_size"`
+	} `mapstructure:"storage"`
 }
 
 var (
@@ -52,5 +52,6 @@ func GetConfig() *Config {
 				log.Fatalf("could not decode config file into struct: %v", err)
 			}
 		})
+
 	return cfg
 }

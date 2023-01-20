@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/internal/usecase"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"
@@ -12,7 +11,6 @@ import (
 
 const (
 	defaultEntityCap = 25
-	timeModel        = "2006-01-02"
 )
 
 type PositionRepo struct {
@@ -46,10 +44,11 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 	return nil
 }
 
-func (pr *PositionRepo) FindAll(ctx context.Context) ([]entity.Position, error) {
-	q := `SELECT * FROM all_positions`
+func (pr *PositionRepo) FindAll(ctx context.Context, id *string) ([]entity.Position, error) {
+	q := `SELECT * FROM all_positions
+        WHERE user_id = $1`
 
-	rows, err := pr.Pool.Query(ctx, q)
+	rows, err := pr.Pool.Query(ctx, q, id)
 	if err != nil {
 		return nil, fmt.Errorf("sql request: FinAll positions: Query: %s", err)
 	}
@@ -58,39 +57,27 @@ func (pr *PositionRepo) FindAll(ctx context.Context) ([]entity.Position, error) 
 	positions := make([]entity.Position, 0, defaultEntityCap)
 
 	for rows.Next() {
-		//TODO: Create DTO???
-		var (
-			p               entity.Position
-			openDate        pgtype.Date
-			accordingToPlan bool
-			closePrice      pgtype.Text
-		)
+		p := &PositionDTO{}
 
 		err := rows.Scan(
 			&p.ID,
-			&openDate,
+			&p.OpenDate,
 			&p.Pair,
 			&p.Reason,
-			&accordingToPlan,
+			&p.AccordingToPlan,
 			&p.Risk,
 			&p.Direction,
 			&p.Deposit,
 			&p.OpenPrice,
 			&p.StopLossPrice,
 			&p.TakeProfitPrice,
-			&closePrice,
+			&p.ClosePrice,
 			&p.UserID)
 		if err != nil {
 			return nil, fmt.Errorf("sql request: FindAll positons: Scan: %s", err)
 		}
 
-		p.OpenDate = fmt.Sprintf("%s", openDate.Time.Format(timeModel))
-		p.AccordingToPlan = fmt.Sprintf("%t", accordingToPlan)
-		if closePrice.Valid {
-			p.ClosePrice = fmt.Sprintf("%s", closePrice.String)
-		}
-
-		positions = append(positions, p)
+		positions = append(positions, *p.ToEntity())
 	}
 
 	return positions, nil

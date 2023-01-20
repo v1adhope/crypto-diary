@@ -2,7 +2,7 @@ package httpserver
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,12 +10,13 @@ import (
 	"time"
 
 	"github.com/v1adhope/crypto-diary/internal/config"
+	"github.com/v1adhope/crypto-diary/pkg/logger"
 )
 
 // TODO: Decomposition
 // TODO: Separate configure
 // TODO: Logger
-func New(handler http.Handler, cfg *config.Config) {
+func New(handler http.Handler, cfg *config.Config, logger *logger.Logger) {
 	srv := &http.Server{
 		Addr:         cfg.Server.Address,
 		Handler:      handler,
@@ -25,7 +26,7 @@ func New(handler http.Handler, cfg *config.Config) {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal("listen:", err)
+			logger.Fatal().Err(err).Msg("listen and serve")
 		}
 	}()
 
@@ -33,16 +34,16 @@ func New(handler http.Handler, cfg *config.Config) {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("shutdown server ...")
+	logger.Info().Msg("shutdown server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("server shutdown:", err)
+		logger.Fatal().Err(err).Msg("server shutdown")
 	}
 	select {
 	case <-ctx.Done():
-		log.Printf("timeout of %d seconds", cfg.Server.ShutdownTimeout)
+		logger.Info().Msg(fmt.Sprintf("timeout of %d seconds", cfg.Server.ShutdownTimeout))
 	}
-	log.Println("server exiting")
+	logger.Info().Msg("server exiting")
 }
