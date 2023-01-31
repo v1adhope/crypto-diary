@@ -16,9 +16,9 @@ import (
 // TODO: Decomposition
 // TODO: Separate configure
 // TODO: Logger
-func New(handler http.Handler, cfg *config.Config, logger *logger.Logger) {
+func New(handler http.Handler, cfg *config.Server, logger *logger.Logger) {
 	srv := &http.Server{
-		Addr:         cfg.Server.Address,
+		Addr:         cfg.Address,
 		Handler:      handler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -36,14 +36,14 @@ func New(handler http.Handler, cfg *config.Config, logger *logger.Logger) {
 	<-quit
 	logger.Info().Msg("shutdown server ...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Fatal().Err(err).Msg("server shutdown")
 	}
 	select {
 	case <-ctx.Done():
-		logger.Info().Msg(fmt.Sprintf("timeout of %d seconds", cfg.Server.ShutdownTimeout))
+		logger.Info().Msg(fmt.Sprintf("timeout of %d seconds", cfg.ShutdownTimeout))
 	}
 	logger.Info().Msg("server exiting")
 }

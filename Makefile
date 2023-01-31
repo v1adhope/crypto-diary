@@ -20,3 +20,9 @@ restart:
 
 compose-build: build
 	docker compose  build
+
+.PHONY: cover
+cover:
+	go test -short -count=1 -race -coverprofile=cover.out ./...
+	go tool cover -html=cover.out
+	rm cover.out

@@ -10,23 +10,26 @@ import (
 )
 
 type Config struct {
-	LogLevel string `mapstructure:"log_level"`
+	LogLevel       string   `mapstructure:"log_level"`
+	Server         *Server  `mapstructure:"server"`
+	Storage        *Storage `mapstructure:"storage"`
+	PasswordSecret string   `mapstructure:"password_secret"`
+}
 
-	Server struct {
-		Address         string        `mapstructure:"socket"`
-		ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
-	} `mapstructure:"server"`
+type Server struct {
+	Address         string        `mapstructure:"socket"`
+	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
+}
 
-	Storage struct {
-		Username     string        `mapstructure:"username"`
-		Password     string        `mapstructure:"password"`
-		Host         string        `mapstructure:"host"`
-		Port         string        `mapstructure:"port"`
-		Database     string        `mapstructure:"database"`
-		ConnAttempts int           `mapstructure:"conn_attempts"`
-		ConnTimeout  time.Duration `mapstructure:"conn_timeout"`
-		PoolSize     int32         `mapstructure:"pool_size"`
-	} `mapstructure:"storage"`
+type Storage struct {
+	Username     string        `mapstructure:"username"`
+	Password     string        `mapstructure:"password"`
+	Host         string        `mapstructure:"host"`
+	Port         string        `mapstructure:"port"`
+	Database     string        `mapstructure:"database"`
+	ConnAttempts int           `mapstructure:"conn_attempts"`
+	ConnTimeout  time.Duration `mapstructure:"conn_timeout"`
+	PoolSize     int32         `mapstructure:"pool_size"`
 }
 
 var (

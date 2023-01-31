@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/v1adhope/crypto-diary/internal/entity"
-	"github.com/v1adhope/crypto-diary/internal/usecase"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"
 )
 
@@ -15,6 +14,10 @@ const (
 
 type PositionRepo struct {
 	*postgres.Postgres
+}
+
+func NewPosition(pg *postgres.Postgres) *PositionRepo {
+	return &PositionRepo{pg}
 }
 
 func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) error {
@@ -28,7 +31,7 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 		position.OpenDate,
 		position.Pair,
 		position.Reason,
-		position.AccordingToPlan,
+		position.Strategically,
 		position.Risk,
 		position.Direction,
 		position.Deposit,
@@ -36,7 +39,8 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 		position.StopLossPrice,
 		position.TakeProfitPrice,
 		position.ClosePrice,
-		position.UserID).Scan(&position.ID)
+		position.UserID).
+		Scan(&position.ID)
 	if err != nil {
 		return fmt.Errorf("sql request: Create position: QueryRow: %s", err)
 	}
@@ -64,7 +68,7 @@ func (pr *PositionRepo) FindAll(ctx context.Context, id *string) ([]entity.Posit
 			&p.OpenDate,
 			&p.Pair,
 			&p.Reason,
-			&p.AccordingToPlan,
+			&p.Strategically,
 			&p.Risk,
 			&p.Direction,
 			&p.Deposit,
@@ -84,11 +88,11 @@ func (pr *PositionRepo) FindAll(ctx context.Context, id *string) ([]entity.Posit
 }
 
 // TODO: commandTag
-func (pr *PositionRepo) Delete(ctx context.Context, ID *string) error {
+func (pr *PositionRepo) Delete(ctx context.Context, id *string) error {
 	q := `DELETE FROM positions
         WHERE position_id = $1`
 
-	commandTag, err := pr.Pool.Exec(ctx, q, ID)
+	commandTag, err := pr.Pool.Exec(ctx, q, id)
 	if err != nil {
 		return fmt.Errorf("sql request: Delete positons: Scan: %s", err)
 	}
@@ -97,8 +101,4 @@ func (pr *PositionRepo) Delete(ctx context.Context, ID *string) error {
 	}
 
 	return nil
-}
-
-func NewPosition(pg *postgres.Postgres) usecase.PositionRepo {
-	return &PositionRepo{pg}
 }

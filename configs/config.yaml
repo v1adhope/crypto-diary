@@ -2,6 +2,7 @@ log_level: info
 server:
   socket: 0.0.0.0:8080
   shutdown_timeout: 0 # in seconds
+password_secret: 47x7o3yFukFjWQ94Z9qFeQhVtXy7spzYZiFu5eLsU72uxUbSo35bu2j9tDTEcAZaAnWcnwZe
 storage:
   username: designer
   password: designer
@@ -9,5 +10,5 @@ storage:
   port: 5432
   database: crypto-diary
   conn_attempts: 10
-  conn_timeout: 1 # in seconds
+  conn_timeout: 3 # in seconds
   pool_size: 1

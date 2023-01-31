@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/v1adhope/crypto-diary/internal/usecase"
 	"github.com/v1adhope/crypto-diary/pkg/logger"
 )
 
@@ -10,8 +11,7 @@ type positionRoutes struct {
 	l *logger.Logger
 }
 
-func newPositionRoutes(handler *gin.RouterGroup, l *logger.Logger) {
-
+func newPositionRoutes(handler *gin.RouterGroup, u usecase.Position, l *logger.Logger) {
 	r := &positionRoutes{
 		l: l,
 	}

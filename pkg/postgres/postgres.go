@@ -26,13 +26,13 @@ type Postgres struct {
 }
 
 // TODO: Separate configure
-func NewClient(cfg *config.Config) (*Postgres, error) {
+func NewClient(cfg *config.Storage) (*Postgres, error) {
 	pg := &Postgres{
-		connAttempts: cfg.Storage.ConnAttempts,
-		connTimeout:  cfg.Storage.ConnTimeout,
-		poolsize:     cfg.Storage.PoolSize,
+		connAttempts: cfg.ConnAttempts,
+		connTimeout:  cfg.ConnTimeout,
+		poolsize:     cfg.PoolSize,
 	}
-	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", cfg.Storage.Username, cfg.Storage.Password, cfg.Storage.Host, cfg.Storage.Port, cfg.Storage.Database)
+	dsn := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", cfg.Username, cfg.Password, cfg.Host, cfg.Port, cfg.Database)
 
 	poolCfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
@@ -43,7 +43,7 @@ func NewClient(cfg *config.Config) (*Postgres, error) {
 
 	pg.Pool, err = pgxpool.NewWithConfig(context.Background(), poolCfg)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create pool: %s", err)
+		return nil, fmt.Errorf("postgres: unable to create pool: %s", err)
 	}
 
 	for pg.connAttempts > 0 {
@@ -52,7 +52,7 @@ func NewClient(cfg *config.Config) (*Postgres, error) {
 		if err == nil {
 			break
 		}
-		log.Printf("ping failed: attempts left %d: %s", pg.connAttempts, err)
+		log.Printf("postgres: ping failed: attempts left %d: %s", pg.connAttempts, err)
 
 		time.Sleep(pg.connTimeout * time.Second)
 
@@ -60,7 +60,7 @@ func NewClient(cfg *config.Config) (*Postgres, error) {
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("unable to create connection pool: %s", err)
+		return nil, fmt.Errorf("postgres: unable to create connection pool: %s", err)
 	}
 	return pg, nil
 }

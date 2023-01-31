@@ -10,7 +10,7 @@ type Position struct {
 	OpenDate        string `json:"openDate"`
 	Pair            string `json:"pair"`
 	Reason          string `json:"reason"`
-	AccordingToPlan string `json:"accordingToPlan"`
+	Strategically   string `json:"strategically"`
 	Risk            string `json:"risk"`
 	Direction       string `json:"direction"`
 	Deposit         string `json:"deposit"`
@@ -32,7 +32,7 @@ func (u *Position) ValidPosition() error {
 		errBuff = fmt.Errorf("%s specify the reason:", errBuff)
 	}
 
-	_, err := strconv.ParseBool(u.AccordingToPlan)
+	_, err := strconv.ParseBool(u.Strategically)
 	if err != nil {
 		errBuff = fmt.Errorf("%s according to plan true of false:", errBuff)
 	}
@@ -81,17 +81,3 @@ func (u *Position) ValidPosition() error {
 	}
 	return nil
 }
-
-// TODO: remove or replace
-// type CreatePositionDTO struct {
-// 	OpenDate        string `json:"openDate"`
-// 	Pair            string `json:"pair"`
-// 	PercentageRisk  string `json:"percentageRisk"`
-// 	Direction       string `json:"direction"`
-// 	Deposit         string `json:"deposit"`
-// 	OpenPrice       string `json:"openPrice"`
-// 	StopLossPrice   string `json:"stopLossPrice"`
-// 	TakeProfitPrice string `json:"takeProfitPrice"`
-// 	ClosePrice      string `json:"closePrice"`
-// 	UserID          string `json:"userID"`
-// }

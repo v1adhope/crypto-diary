@@ -14,7 +14,7 @@ type PositionDTO struct {
 	OpenDate        pgtype.Date
 	Pair            string
 	Reason          string
-	AccordingToPlan bool
+	Strategically   bool
 	Risk            string
 	Direction       string
 	Deposit         string
@@ -26,24 +26,27 @@ type PositionDTO struct {
 }
 
 func (pd *PositionDTO) ToEntity() *entity.Position {
-	position := &entity.Position{}
+	opendate := fmt.Sprintf("%s", pd.OpenDate.Time.Format(timeModel))
+	strategically := fmt.Sprintf("%t", pd.Strategically)
 
-	position.ID = pd.ID
-	position.Pair = pd.Pair
-	position.Reason = pd.Reason
-	position.Risk = pd.Risk
-	position.Direction = pd.Direction
-	position.Deposit = pd.Deposit
-	position.OpenPrice = pd.OpenPrice
-	position.StopLossPrice = pd.StopLossPrice
-	position.TakeProfitPrice = pd.TakeProfitPrice
-	position.UserID = pd.UserID
-
-	position.OpenDate = fmt.Sprintf("%s", pd.OpenDate.Time.Format(timeModel))
-	position.AccordingToPlan = fmt.Sprintf("%t", pd.AccordingToPlan)
+	var closePrice string
 	if pd.ClosePrice.Valid {
-		position.ClosePrice = fmt.Sprintf("%s", pd.ClosePrice.String)
+		closePrice = fmt.Sprintf("%s", pd.ClosePrice.String)
 	}
 
-	return position
+	return &entity.Position{
+		ID:              pd.ID,
+		OpenDate:        opendate,
+		Pair:            pd.Pair,
+		Reason:          pd.Reason,
+		Strategically:   strategically,
+		Risk:            pd.Risk,
+		Direction:       pd.Direction,
+		Deposit:         pd.Deposit,
+		OpenPrice:       pd.OpenPrice,
+		StopLossPrice:   pd.StopLossPrice,
+		TakeProfitPrice: pd.TakeProfitPrice,
+		ClosePrice:      closePrice,
+		UserID:          pd.UserID,
+	}
 }
