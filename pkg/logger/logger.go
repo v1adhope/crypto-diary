@@ -1,5 +1,5 @@
 // NOTE: SINGELTON
-// NOTE: Simple logger
+// TODO: Interface
 package logger
 
 import (

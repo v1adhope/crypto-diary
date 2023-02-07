@@ -2,11 +2,14 @@ package hash
 
 import (
 	"crypto/sha256"
+	"errors"
 	"fmt"
+	"strings"
 )
 
 type PasswordHasher interface {
 	GenerateEncryptedPassword(password string) (string, error)
+	CompareHashAndPassword(hashedPassword, password string) error
 }
 
 type Hash struct {
@@ -25,4 +28,18 @@ func (h *Hash) GenerateEncryptedPassword(password string) (string, error) {
 	}
 
 	return fmt.Sprintf("%x", hash.Sum([]byte(h.salt))), nil
+}
+
+func (h *Hash) CompareHashAndPassword(hashedPassword, password string) error {
+	hashedClientPassword, err := h.GenerateEncryptedPassword(password)
+	if err != nil {
+		return err
+	}
+
+	res := strings.Compare(hashedPassword, hashedClientPassword)
+	if res != 0 {
+		return errors.New("passwords do not match")
+	}
+
+	return nil
 }

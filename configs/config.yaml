@@ -1,14 +1,30 @@
 log_level: info
+
 server:
   socket: 0.0.0.0:8080
   shutdown_timeout: 0 # in seconds
+  read_timeout: 10 # in seconds
+  write_timeout: 10 # in seconds
+
+auth:
+  issuer: crypto-diary.com # e.g.
+  refresh_token_lifetime: 168 # in hours
+  refresh_token_secret: TnFVnbXaqpgmZhpbNcWJunp2CZNkmRLtxxdzkijvoqMtk7LpS2xp7pWitTDRFkXtZXKS22Es
+  access_token_lifetime: 5 # in minutes
+  access_token_secret: fWoWCe9MfDihrPr4j7FH5dgy33kXdsRYVj9oWVHYQFynUWg9FSiRc3jMp9CtEJjXXYxAvrVb
+
+session_storage:
+  socket: session:6379
+  password: ""
+  database: 0
+
 password_secret: 47x7o3yFukFjWQ94Z9qFeQhVtXy7spzYZiFu5eLsU72uxUbSo35bu2j9tDTEcAZaAnWcnwZe
+
 storage:
   username: designer
   password: designer
-  host: postgres
-  port: 5432
-  database: crypto-diary
+  socket: storage:5432
+  database: crypto_diary
   conn_attempts: 10
   conn_timeout: 3 # in seconds
   pool_size: 1

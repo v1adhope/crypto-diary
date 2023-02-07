@@ -1,35 +1,25 @@
 // NOTE: SINGELTON
+// TODO: Replace to env
 package config
 
 import (
 	"log"
 	"sync"
-	"time"
 
 	"github.com/spf13/viper"
+	"github.com/v1adhope/crypto-diary/pkg/auth"
+	"github.com/v1adhope/crypto-diary/pkg/httpserver"
+	"github.com/v1adhope/crypto-diary/pkg/postgres"
+	"github.com/v1adhope/crypto-diary/pkg/rds"
 )
 
 type Config struct {
-	LogLevel       string   `mapstructure:"log_level"`
-	Server         *Server  `mapstructure:"server"`
-	Storage        *Storage `mapstructure:"storage"`
-	PasswordSecret string   `mapstructure:"password_secret"`
-}
-
-type Server struct {
-	Address         string        `mapstructure:"socket"`
-	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
-}
-
-type Storage struct {
-	Username     string        `mapstructure:"username"`
-	Password     string        `mapstructure:"password"`
-	Host         string        `mapstructure:"host"`
-	Port         string        `mapstructure:"port"`
-	Database     string        `mapstructure:"database"`
-	ConnAttempts int           `mapstructure:"conn_attempts"`
-	ConnTimeout  time.Duration `mapstructure:"conn_timeout"`
-	PoolSize     int32         `mapstructure:"pool_size"`
+	LogLevel       string             `mapstructure:"log_level"`
+	Server         *httpserver.Config `mapstructure:"server"`
+	Storage        *postgres.Config   `mapstructure:"storage"`
+	PasswordSecret string             `mapstructure:"password_secret"`
+	Auth           *auth.Config       `mapstructure:"auth"`
+	SessionStorage *rds.Config        `mapstructure:"session_storage"`
 }
 
 var (

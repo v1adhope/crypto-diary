@@ -9,17 +9,21 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/v1adhope/crypto-diary/internal/config"
 	"github.com/v1adhope/crypto-diary/pkg/logger"
 )
 
+type Config struct {
+	Socket          string        `mapstructure:"socket"`
+	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
+	ReadTimeout     time.Duration `mapstructure:"read_timeout"`
+	WriteTimeout    time.Duration `mapstructure:"write_timeout"`
+}
+
 // TODO: Decomposition
-// TODO: Separate configure
-// TODO: Logger
-func New(handler http.Handler, cfg *config.Server, logger *logger.Logger) {
+func New(h http.Handler, cfg *Config, logger *logger.Logger) {
 	srv := &http.Server{
-		Addr:         cfg.Address,
-		Handler:      handler,
+		Addr:         cfg.Socket,
+		Handler:      h,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 	}

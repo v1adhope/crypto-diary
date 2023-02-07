@@ -1,16 +1,21 @@
 package main
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/v1adhope/crypto-diary/internal/config"
 	v1 "github.com/v1adhope/crypto-diary/internal/controller/http/v1"
 	"github.com/v1adhope/crypto-diary/internal/usecase"
 	"github.com/v1adhope/crypto-diary/internal/usecase/repository"
+	"github.com/v1adhope/crypto-diary/internal/usecase/session"
+	"github.com/v1adhope/crypto-diary/pkg/auth"
 	"github.com/v1adhope/crypto-diary/pkg/hash"
 	"github.com/v1adhope/crypto-diary/pkg/httpserver"
 	"github.com/v1adhope/crypto-diary/pkg/logger"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"
+	"github.com/v1adhope/crypto-diary/pkg/rds"
 )
 
 func main() {
@@ -25,11 +30,25 @@ func main() {
 
 	repos := repository.New(pgClient)
 
-	useCases := usecase.New(repos)
-
 	hasher := hash.New(cfg.PasswordSecret)
 
 	validate := validator.New()
+
+	auth := auth.New(cfg.Auth)
+
+	redisClient, err := rds.NewClient(context.Background(), cfg.SessionStorage)
+	if err != nil {
+		logger.Fatal().Err(err).Send()
+	}
+
+	sessionStorage := session.New(redisClient)
+
+	useCases := usecase.New(usecase.Deps{
+		Repos:   repos,
+		Hasher:  hasher,
+		Auth:    auth,
+		Session: sessionStorage,
+	})
 
 	// TODO
 	handler := gin.New()
@@ -37,7 +56,6 @@ func main() {
 		Handler:  handler,
 		UseCases: useCases,
 		Logger:   logger,
-		Hasher:   hasher,
 		Validate: validate,
 	})
 

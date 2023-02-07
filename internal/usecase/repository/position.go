@@ -48,7 +48,7 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 	return nil
 }
 
-func (pr *PositionRepo) FindAll(ctx context.Context, id *string) ([]entity.Position, error) {
+func (pr *PositionRepo) FindAll(ctx context.Context, id string) ([]entity.Position, error) {
 	q := `SELECT * FROM all_positions
         WHERE user_id = $1`
 
@@ -88,7 +88,7 @@ func (pr *PositionRepo) FindAll(ctx context.Context, id *string) ([]entity.Posit
 }
 
 // TODO: commandTag
-func (pr *PositionRepo) Delete(ctx context.Context, id *string) error {
+func (pr *PositionRepo) Delete(ctx context.Context, id string) error {
 	q := `DELETE FROM positions
         WHERE position_id = $1`
 

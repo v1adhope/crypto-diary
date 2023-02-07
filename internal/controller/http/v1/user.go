@@ -2,24 +2,20 @@ package v1
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/internal/usecase"
-	"github.com/v1adhope/crypto-diary/pkg/hash"
 	"github.com/v1adhope/crypto-diary/pkg/logger"
 )
 
-// TODO
 type userRoutes struct {
 	h        *gin.RouterGroup
 	l        *logger.Logger
 	validate *validator.Validate
 	useCase  usecase.User
-	hasher   hash.PasswordHasher
 }
 
 func newUserRoutes(r *userRoutes) {
@@ -27,63 +23,108 @@ func newUserRoutes(r *userRoutes) {
 	{
 		h.POST("/signup", r.signUp)
 		h.POST("/signin", r.signIn)
+		h.POST("/refresh", r.refreshTokens)
 	}
 }
 
 type signRequest struct {
 	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Password string `json:"password" validate:"required,max=32,min=8"`
 }
 
 func (r *userRoutes) signUp(c *gin.Context) {
 	request := &signRequest{}
 
-	if err := c.BindJSON(&request); err != nil {
-		r.l.Logger.Err(err).Msg("http/v1: signUp: BindJSON")
+	if err := c.ShouldBindJSON(request); err != nil {
+		r.l.Logger.Warn().Err(err).Msg("http/v1: signUp: ShouldBindJSON")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
-
 		return
 	}
 
 	if err := r.validate.Struct(request); err != nil {
-		r.l.Logger.Err(err).Msg("http/v1: signUp: validate")
+		r.l.Logger.Warn().Err(err).Msg("http/v1: signUp: Struct")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
-
 		return
 	}
 
-	encryptedPassword, err := r.hasher.GenerateEncryptedPassword(request.Password)
-	if err != nil {
-		r.l.Logger.Err(err).Msg("http/v1: signUp: GenerateEncryptedPassword")
-		c.AbortWithStatus(http.StatusInternalServerError)
+	if err := r.useCase.SignUp(c.Request.Context(), request.Email, request.Password); err != nil {
+		r.l.Logger.Err(err).Msg("http/v1: signUp: SignUp")
 
-		return
-	}
-
-	if err := r.useCase.SignUp(c.Request.Context(), request.Email, encryptedPassword); err != nil {
-		r.l.Logger.Err(err).Msg("http/v1: signUp: useCase")
-
-		err = errors.Unwrap(err)
-
-		if err == entity.ErrUserAlreadyExists {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("%s", err)})
-
+		if errors.Is(err, entity.ErrUserAlreadyExists) {
+			r.l.Logger.Warn().Err(err).Msg("http/v1: signUp: SignUp")
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": entity.ErrUserAlreadyExists.Error()})
 			return
-
 		}
 
 		c.AbortWithStatus(http.StatusInternalServerError)
-
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.Status(http.StatusCreated)
 }
 
-type signResponse struct {
-	ID string `json:"id"`
+func (r *userRoutes) signIn(c *gin.Context) {
+	request := &signRequest{}
+
+	if err := c.ShouldBindJSON(request); err != nil {
+		r.l.Logger.Warn().Err(err).Msg("http/v1: signIn: ShouldBindJSON")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
+		return
+	}
+
+	if err := r.validate.Struct(request); err != nil {
+		r.l.Logger.Warn().Err(err).Msg("http/v1: signIn: Struct")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
+		return
+	}
+
+	refreshToken, accessToken, err := r.useCase.SignIn(c.Request.Context(), request.Email, request.Password)
+	if err != nil {
+		if errors.Is(err, entity.ErrUserNotExists) {
+			r.l.Logger.Warn().Err(err).Msg("http/v1: signIn: SignIn")
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": entity.ErrUserNotExists.Error()})
+			return
+		}
+
+		if errors.Is(err, entity.ErrWrongPassword) {
+			r.l.Logger.Warn().Err(err).Msg("http/v1: signIn: SignIn")
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
+			return
+		}
+
+		r.l.Logger.Err(err).Msg("http/v1: signIn: SignIn")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"refreshToken": refreshToken,
+		"accessToken":  accessToken,
+	})
 }
 
-func (ur *userRoutes) signIn(c *gin.Context) {
+type refreshToken struct {
+	Token string `json:"refreshToken"`
+}
 
+func (r *userRoutes) refreshTokens(c *gin.Context) {
+	clientToken := &refreshToken{}
+
+	if err := c.ShouldBindJSON(clientToken); err != nil {
+		r.l.Logger.Warn().Err(err).Msg("http/v1: refreshTokens: ShouldBindJSON")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "invalid token"})
+		return
+	}
+
+	refreshToken, accessToken, err := r.useCase.ReissueTokens(c.Request.Context(), clientToken.Token)
+	if err != nil {
+		r.l.Logger.Warn().Err(err).Msg("http/v1: refreshTokens: ReissueTokens")
+		errorResponse(c, http.StatusUnauthorized, "invalid token")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"refreshToken": refreshToken,
+		"accessToken":  accessToken,
+	})
 }
