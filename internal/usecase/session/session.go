@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/v1adhope/crypto-diary/pkg/rds"
 )
 
@@ -17,10 +16,10 @@ func New(client *rds.Redis) *Session {
 	return &Session{client}
 }
 
-func (s *Session) AddToBlackList(ctx context.Context, token string, exp time.Duration) error {
-	exp *= time.Hour
+func (s *Session) AddToBlackList(ctx context.Context, token string, ttl time.Duration) error {
+	ttl *= time.Hour
 
-	err := s.Client.Set(ctx, token, token, exp).Err()
+	err := s.Client.Set(ctx, token, "", ttl).Err()
 	if err != nil {
 		return fmt.Errorf("couldn't add to the blacklist: %w", err)
 	}
@@ -29,14 +28,14 @@ func (s *Session) AddToBlackList(ctx context.Context, token string, exp time.Dur
 }
 
 func (s *Session) CheckToken(ctx context.Context, token string) error {
-	value, err := s.Client.Get(ctx, token).Result()
-	if err == redis.Nil {
-		return nil
-	}
-
+	isExists, err := s.Client.Exists(ctx, token).Result()
 	if err != nil {
-		return fmt.Errorf("session: CheckToken: Get: %w", err)
+		return fmt.Errorf("session: CheckToken: Exists: %w", err)
 	}
 
-	return fmt.Errorf("token in the blocklist: %s", value)
+	if isExists != 0 {
+		return fmt.Errorf("token in the blocklist: %s", token)
+	}
+
+	return nil
 }

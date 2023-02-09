@@ -8,10 +8,10 @@ import (
 
 // TODO
 type positionRoutes struct {
-	l *logger.Logger
+	l *logger.Log
 }
 
-func newPositionRoutes(handler *gin.RouterGroup, u usecase.Position, l *logger.Logger) {
+func newPositionRoutes(handler *gin.RouterGroup, u usecase.Position, l *logger.Log) {
 	r := &positionRoutes{
 		l: l,
 	}

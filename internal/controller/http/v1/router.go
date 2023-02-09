@@ -7,28 +7,27 @@ import (
 	"github.com/v1adhope/crypto-diary/pkg/logger"
 )
 
-type Deps struct {
+type Router struct {
 	Handler  *gin.Engine
 	UseCases *usecase.UseCases
-	Logger   *logger.Logger
+	Logger   *logger.Log
 	Validate *validator.Validate
 }
 
-// TODO
-func NewRouter(d *Deps) {
-	d.Handler.Use(
+func NewRouter(r *Router) {
+	r.Handler.Use(
 		gin.Logger(),
 		gin.Recovery(),
 	)
-	d.Handler.SetTrustedProxies(nil)
+	r.Handler.SetTrustedProxies(nil)
 
-	h := d.Handler.Group("/v1")
+	h := r.Handler.Group("/v1")
 	{
 		newUserRoutes(&userRoutes{
 			h:        h,
-			l:        d.Logger,
-			validate: d.Validate,
-			useCase:  d.UseCases.User,
+			logger:   r.Logger,
+			validate: r.Validate,
+			useCase:  r.UseCases.User,
 		})
 
 		// newPositionRoutes(h, d.UseCases.Position, d.Logger)

@@ -33,3 +33,9 @@ func NewClient(ctx context.Context, cfg *Config) (*Redis, error) {
 
 	return rdb, nil
 }
+
+func (r *Redis) Close() {
+	if r.Client != nil {
+		r.Client.Close()
+	}
+}

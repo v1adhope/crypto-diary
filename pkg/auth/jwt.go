@@ -27,11 +27,10 @@ type TokenManager interface {
 	//Returning Refresh, Access tokens and error
 	GenerateTokenPair(id string) (string, string, error)
 
-	// Depending on the header "kid" selects the type of token
-	ValidateToken(clientToken string) (string, time.Duration, error)
+	ValidateAccessToken(clientToken string) (bool, error)
+	ValidateRefreshToken(clientToken string) (string, time.Duration, error)
 }
 
-// DRY???
 type Manager struct {
 	issuer               string
 	refreshTokenLifetime time.Duration
@@ -78,6 +77,7 @@ func generateUUIDv4() (string, error) {
 	return fmt.Sprintf("%s", u4), nil
 }
 
+// Tokens can change their fields, so there are duplications
 type refreshClaims struct {
 	jwt.RegisteredClaims
 }
@@ -130,15 +130,11 @@ func (m *Manager) generateAccessToken(id, uuidv string) (string, error) {
 	return signedToken, nil
 }
 
-func (m *Manager) ValidateToken(clientToken string) (string, time.Duration, error) {
+func (m *Manager) ValidateRefreshToken(clientToken string) (string, time.Duration, error) {
 	token, err := jwt.Parse(clientToken, func(token *jwt.Token) (interface{}, error) {
 
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("kid %v: unexpected signing method %v", token.Header["kid"], token.Header["alg"])
-		}
-
-		if token.Header["kid"] == _kidAccessToken {
-			return []byte(m.accessTokenSecret), nil
 		}
 
 		return []byte(m.refreshTokenSecret), nil
@@ -147,20 +143,36 @@ func (m *Manager) ValidateToken(clientToken string) (string, time.Duration, erro
 		return "", 0, fmt.Errorf("parse failed: %w", err)
 	}
 
-	if !token.Valid {
+	if !token.Valid || token.Header["kid"] != _kidRefreshToken {
 		return "", 0, errors.New("invalid token")
 	}
 
-	if token.Header["kid"] == _kidRefreshToken {
-		id, err := m.extractClaimField(token, "sub")
-		if err != nil {
-			return "", 0, err
-		}
-
-		return id.(string), m.refreshTokenLifetime, nil
+	id, err := m.extractClaimField(token, "sub")
+	if err != nil {
+		return "", 0, err
 	}
 
-	return "", 0, nil
+	return id.(string), m.refreshTokenLifetime, nil
+}
+
+func (m *Manager) ValidateAccessToken(clientToken string) error {
+	token, err := jwt.Parse(clientToken, func(token *jwt.Token) (interface{}, error) {
+
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("kid %v: unexpected signing method %v", token.Header["kid"], token.Header["alg"])
+		}
+
+		return []byte(m.accessTokenSecret), nil
+	})
+	if err != nil {
+		return fmt.Errorf("parse failed: %w", err)
+	}
+
+	if !token.Valid || token.Header["kid"] != _kidAccessToken {
+		return errors.New("invalid token")
+	}
+
+	return nil
 }
 
 // May return nil use Sprintf or pointer varriable to claim

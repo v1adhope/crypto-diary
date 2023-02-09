@@ -13,6 +13,7 @@ type (
 		SignUp(ctx context.Context, email, password string) error
 		SignIn(ctx context.Context, email, password string) (string, string, error)
 		ReissueTokens(ctx context.Context, clientToken string) (string, string, error)
+		CheckAuth(ctx context.Context, clientToken string) error
 	}
 
 	Position interface {
@@ -43,8 +44,8 @@ type (
 		//Returning Refresh, Access tokens and error
 		GenerateTokenPair(id string) (string, string, error)
 
-		// Depending on the header "kid" selects the type of token
-		ValidateToken(clientToken string) (string, time.Duration, error)
+		ValidateAccessToken(clientToken string) error
+		ValidateRefreshToken(clientToken string) (string, time.Duration, error)
 	}
 
 	SessionStorage interface {

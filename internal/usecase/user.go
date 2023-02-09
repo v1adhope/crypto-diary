@@ -67,7 +67,7 @@ func (uc *UserUseCase) ReissueTokens(ctx context.Context, clientToken string) (s
 		return "", "", fmt.Errorf("usecase: ReissueTokens: CheckToken: %w", err)
 	}
 
-	id, lifetime, err := uc.auth.ValidateToken(clientToken)
+	id, lifetime, err := uc.auth.ValidateRefreshToken(clientToken)
 	if err != nil {
 		return "", "", fmt.Errorf("usecase: RefreshTokens: ValidateToken: %w", err)
 	}
@@ -83,4 +83,18 @@ func (uc *UserUseCase) ReissueTokens(ctx context.Context, clientToken string) (s
 	}
 
 	return refreshToken, accessToken, nil
+}
+
+func (uc *UserUseCase) CheckAuth(ctx context.Context, clientToken string) error {
+	err := uc.session.CheckToken(ctx, clientToken)
+	if err != nil {
+		return fmt.Errorf("usecase: ReissueTokens: CheckToken: %w", err)
+	}
+
+	err = uc.auth.ValidateAccessToken(clientToken)
+	if err != nil {
+		return fmt.Errorf("usecase: RefreshTokens: ValidateToken: %w", err)
+	}
+
+	return nil
 }

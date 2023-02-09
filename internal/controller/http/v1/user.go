@@ -13,9 +13,9 @@ import (
 
 type userRoutes struct {
 	h        *gin.RouterGroup
-	l        *logger.Logger
 	validate *validator.Validate
 	useCase  usecase.User
+	logger   logger.Logger
 }
 
 func newUserRoutes(r *userRoutes) {
@@ -36,26 +36,25 @@ func (r *userRoutes) signUp(c *gin.Context) {
 	request := &signRequest{}
 
 	if err := c.ShouldBindJSON(request); err != nil {
-		r.l.Logger.Warn().Err(err).Msg("http/v1: signUp: ShouldBindJSON")
+		r.logger.Debug(err, "http/v1: signUp: ShouldBindJSON")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
 		return
 	}
 
 	if err := r.validate.Struct(request); err != nil {
-		r.l.Logger.Warn().Err(err).Msg("http/v1: signUp: Struct")
+		r.logger.Debug(err, "http/v1: signUp: Struct")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
 		return
 	}
 
 	if err := r.useCase.SignUp(c.Request.Context(), request.Email, request.Password); err != nil {
-		r.l.Logger.Err(err).Msg("http/v1: signUp: SignUp")
-
 		if errors.Is(err, entity.ErrUserAlreadyExists) {
-			r.l.Logger.Warn().Err(err).Msg("http/v1: signUp: SignUp")
+			r.logger.Debug(err, "http/v1: signUp: SignUp")
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": entity.ErrUserAlreadyExists.Error()})
 			return
 		}
 
+		r.logger.Error(err, "http/v1: signUp: SignUp")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -67,13 +66,13 @@ func (r *userRoutes) signIn(c *gin.Context) {
 	request := &signRequest{}
 
 	if err := c.ShouldBindJSON(request); err != nil {
-		r.l.Logger.Warn().Err(err).Msg("http/v1: signIn: ShouldBindJSON")
+		r.logger.Debug(err, "http/v1: signIn: ShouldBindJSON")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
 		return
 	}
 
 	if err := r.validate.Struct(request); err != nil {
-		r.l.Logger.Warn().Err(err).Msg("http/v1: signIn: Struct")
+		r.logger.Debug(err, "http/v1: signIn: Struct")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
 		return
 	}
@@ -81,18 +80,18 @@ func (r *userRoutes) signIn(c *gin.Context) {
 	refreshToken, accessToken, err := r.useCase.SignIn(c.Request.Context(), request.Email, request.Password)
 	if err != nil {
 		if errors.Is(err, entity.ErrUserNotExists) {
-			r.l.Logger.Warn().Err(err).Msg("http/v1: signIn: SignIn")
+			r.logger.Debug(err, "http/v1: signIn: SignIn")
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": entity.ErrUserNotExists.Error()})
 			return
 		}
 
 		if errors.Is(err, entity.ErrWrongPassword) {
-			r.l.Logger.Warn().Err(err).Msg("http/v1: signIn: SignIn")
+			r.logger.Debug(err, "http/v1: signIn: SignIn")
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "incorrect login or password"})
 			return
 		}
 
-		r.l.Logger.Err(err).Msg("http/v1: signIn: SignIn")
+		r.logger.Error(err, "http/v1: signIn: SignIn")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -111,15 +110,15 @@ func (r *userRoutes) refreshTokens(c *gin.Context) {
 	clientToken := &refreshToken{}
 
 	if err := c.ShouldBindJSON(clientToken); err != nil {
-		r.l.Logger.Warn().Err(err).Msg("http/v1: refreshTokens: ShouldBindJSON")
+		r.logger.Debug(err, "http/v1: refreshTokens: ShouldBindJSON")
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "invalid token"})
 		return
 	}
 
 	refreshToken, accessToken, err := r.useCase.ReissueTokens(c.Request.Context(), clientToken.Token)
 	if err != nil {
-		r.l.Logger.Warn().Err(err).Msg("http/v1: refreshTokens: ReissueTokens")
-		errorResponse(c, http.StatusUnauthorized, "invalid token")
+		r.logger.Debug(err, "http/v1: refreshTokens: ReissueTokens")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"msg": "invalid token"})
 		return
 	}
 

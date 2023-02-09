@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,7 +19,7 @@ type Config struct {
 }
 
 // TODO: Decomposition
-func New(h http.Handler, cfg *Config, logger *logger.Logger) {
+func New(h http.Handler, cfg *Config, logger *logger.Log) {
 	srv := &http.Server{
 		Addr:         cfg.Socket,
 		Handler:      h,
@@ -30,7 +29,7 @@ func New(h http.Handler, cfg *Config, logger *logger.Logger) {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatal().Err(err).Msg("listen and serve")
+			logger.Fatal(err, "listen and serve")
 		}
 	}()
 
@@ -38,16 +37,16 @@ func New(h http.Handler, cfg *Config, logger *logger.Logger) {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	logger.Info().Msg("shutdown server ...")
+	logger.Info("shutdown server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Fatal().Err(err).Msg("server shutdown")
+		logger.Fatal(err, "server shutdown")
 	}
 	select {
 	case <-ctx.Done():
-		logger.Info().Msg(fmt.Sprintf("timeout of %d seconds", cfg.ShutdownTimeout))
+		logger.Info("timeout of %d seconds", cfg.ShutdownTimeout)
 	}
-	logger.Info().Msg("server exiting")
+	logger.Info("server exiting")
 }

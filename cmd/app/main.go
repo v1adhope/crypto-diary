@@ -24,7 +24,7 @@ func main() {
 
 	pgClient, err := postgres.NewClient(cfg.Storage)
 	if err != nil {
-		logger.Fatal().Err(err).Send()
+		logger.Fatal(err, "main: pgClient")
 	}
 	defer pgClient.Close()
 
@@ -38,8 +38,9 @@ func main() {
 
 	redisClient, err := rds.NewClient(context.Background(), cfg.SessionStorage)
 	if err != nil {
-		logger.Fatal().Err(err).Send()
+		logger.Fatal(err, "main: redisClient")
 	}
+	defer redisClient.Close()
 
 	sessionStorage := session.New(redisClient)
 
@@ -50,9 +51,9 @@ func main() {
 		Session: sessionStorage,
 	})
 
-	// TODO
 	handler := gin.New()
-	v1.NewRouter(&v1.Deps{
+
+	v1.NewRouter(&v1.Router{
 		Handler:  handler,
 		UseCases: useCases,
 		Logger:   logger,
