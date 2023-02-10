@@ -21,7 +21,7 @@ func NewPosition(pg *postgres.Postgres) *PositionRepo {
 }
 
 func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) error {
-	q := `INSERT INTO positions(open_date, pair, reason, according_to_plan, percentage_risk,
+	q := `INSERT INTO positions(open_date, pair, reason, strategically, percentage_risk,
                              direction, deposit, open_price, stop_loss_price,
                              take_profit_price, close_price, user_id)
         VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -42,19 +42,19 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 		position.UserID).
 		Scan(&position.ID)
 	if err != nil {
-		return fmt.Errorf("sql request: Create position: QueryRow: %s", err)
+		return fmt.Errorf("repository: Create position: QueryRow: %s", err)
 	}
 
 	return nil
 }
 
 func (pr *PositionRepo) FindAll(ctx context.Context, id string) ([]entity.Position, error) {
-	q := `SELECT * FROM all_positions
+	q := `SELECT * FROM get_all_positions
         WHERE user_id = $1`
 
 	rows, err := pr.Pool.Query(ctx, q, id)
 	if err != nil {
-		return nil, fmt.Errorf("sql request: FinAll positions: Query: %s", err)
+		return nil, fmt.Errorf("repository: FindAll position: Query: %s", err)
 	}
 	defer rows.Close()
 
@@ -78,7 +78,7 @@ func (pr *PositionRepo) FindAll(ctx context.Context, id string) ([]entity.Positi
 			&p.ClosePrice,
 			&p.UserID)
 		if err != nil {
-			return nil, fmt.Errorf("sql request: FindAll positons: Scan: %s", err)
+			return nil, fmt.Errorf("repository: FindAll positon: Scan: %w", err)
 		}
 
 		positions = append(positions, *p.ToEntity())
@@ -87,17 +87,51 @@ func (pr *PositionRepo) FindAll(ctx context.Context, id string) ([]entity.Positi
 	return positions, nil
 }
 
-// TODO: commandTag
-func (pr *PositionRepo) Delete(ctx context.Context, id string) error {
+func (pr *PositionRepo) Delete(ctx context.Context, userID, positionID string) error {
 	q := `DELETE FROM positions
-        WHERE position_id = $1`
+        WHERE user_id = $1 AND position_id = $2`
 
-	commandTag, err := pr.Pool.Exec(ctx, q, id)
+	commandTag, err := pr.Pool.Exec(ctx, q, userID, positionID)
 	if err != nil {
-		return fmt.Errorf("sql request: Delete positons: Scan: %s", err)
+		return fmt.Errorf("repository: Delete positon: Exec: %s", err)
 	}
+
 	if commandTag.RowsAffected() != 1 {
-		return fmt.Errorf("No row found to delete")
+		return entity.ErrNoFoundPosition
+	}
+
+	return nil
+}
+
+func (pr *PositionRepo) Replace(ctx context.Context, position *entity.Position) error {
+	q := `UPDATE positions
+        SET open_date = $1, pair = $2, reason = $3, strategically = $4,
+          percentage_risk = $5, direction = $6, deposit = $7, open_price = $8,
+          stop_loss_price=$9, take_profit_price=$10, close_price=$11
+        WHERE position_id = $12 AND user_id = $13`
+
+	commandTag, err := pr.Pool.Exec(ctx, q,
+		position.OpenDate,
+		position.Pair,
+		position.Reason,
+		position.Strategically,
+		position.Risk,
+		position.Direction,
+		position.Deposit,
+		position.OpenPrice,
+		position.StopLossPrice,
+		position.TakeProfitPrice,
+		position.ClosePrice,
+
+		position.ID,
+		position.UserID,
+	)
+	if err != nil {
+		return fmt.Errorf("repository: Replace position: Exec: %w", err)
+	}
+
+	if commandTag.RowsAffected() != 1 {
+		return entity.ErrNothingToChange
 	}
 
 	return nil

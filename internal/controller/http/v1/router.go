@@ -30,6 +30,14 @@ func NewRouter(r *Router) {
 			useCase:  r.UseCases.User,
 		})
 
-		// newPositionRoutes(h, d.UseCases.Position, d.Logger)
+		//TODO
+		ph := h.Group("/position")
+		ph.Use(r.AuthorizeJWT())
+		newPositionRoutes(&positionRoutes{
+			h:        ph,
+			logger:   r.Logger,
+			validate: r.Validate,
+			useCase:  r.UseCases.Position,
+		})
 	}
 }

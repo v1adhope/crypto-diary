@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/v1adhope/crypto-diary/internal/controller/http/dto"
 	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/internal/usecase"
 	"github.com/v1adhope/crypto-diary/pkg/logger"
@@ -27,13 +28,8 @@ func newUserRoutes(r *userRoutes) {
 	}
 }
 
-type signRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,max=32,min=8"`
-}
-
 func (r *userRoutes) signUp(c *gin.Context) {
-	request := &signRequest{}
+	request := &dto.SignRequest{}
 
 	if err := c.ShouldBindJSON(request); err != nil {
 		r.logger.Debug(err, "http/v1: signUp: ShouldBindJSON")
@@ -63,7 +59,7 @@ func (r *userRoutes) signUp(c *gin.Context) {
 }
 
 func (r *userRoutes) signIn(c *gin.Context) {
-	request := &signRequest{}
+	request := &dto.SignRequest{}
 
 	if err := c.ShouldBindJSON(request); err != nil {
 		r.logger.Debug(err, "http/v1: signIn: ShouldBindJSON")
@@ -102,12 +98,8 @@ func (r *userRoutes) signIn(c *gin.Context) {
 	})
 }
 
-type refreshToken struct {
-	Token string `json:"refreshToken"`
-}
-
 func (r *userRoutes) refreshTokens(c *gin.Context) {
-	clientToken := &refreshToken{}
+	clientToken := &dto.RefreshToken{}
 
 	if err := c.ShouldBindJSON(clientToken); err != nil {
 		r.logger.Debug(err, "http/v1: refreshTokens: ShouldBindJSON")

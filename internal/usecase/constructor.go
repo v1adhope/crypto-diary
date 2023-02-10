@@ -5,8 +5,8 @@ import (
 )
 
 type UseCases struct {
-	User User
-	// Position PositionUseCase
+	User     User
+	Position Position
 }
 
 type Deps struct {
@@ -18,7 +18,7 @@ type Deps struct {
 
 func New(d Deps) *UseCases {
 	return &UseCases{
-		User: NewUserCase(d.Repos.User, d.Hasher, d.Auth, d.Session),
-		// Position:
+		User:     NewUserCase(d.Repos.User, d.Hasher, d.Auth, d.Session),
+		Position: NewPositionUseCase(d.Repos.Position),
 	}
 }

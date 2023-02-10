@@ -27,7 +27,7 @@ type TokenManager interface {
 	//Returning Refresh, Access tokens and error
 	GenerateTokenPair(id string) (string, string, error)
 
-	ValidateAccessToken(clientToken string) (bool, error)
+	ValidateAccessToken(clientToken string) (string, error)
 	ValidateRefreshToken(clientToken string) (string, time.Duration, error)
 }
 
@@ -120,7 +120,7 @@ func (m *Manager) generateAccessToken(id, uuidv string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token.Header["kid"] = _kidRefreshToken
+	token.Header["kid"] = _kidAccessToken
 
 	signedToken, err := token.SignedString([]byte(m.accessTokenSecret))
 	if err != nil {
@@ -155,7 +155,7 @@ func (m *Manager) ValidateRefreshToken(clientToken string) (string, time.Duratio
 	return id.(string), m.refreshTokenLifetime, nil
 }
 
-func (m *Manager) ValidateAccessToken(clientToken string) error {
+func (m *Manager) ValidateAccessToken(clientToken string) (string, error) {
 	token, err := jwt.Parse(clientToken, func(token *jwt.Token) (interface{}, error) {
 
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -165,14 +165,19 @@ func (m *Manager) ValidateAccessToken(clientToken string) error {
 		return []byte(m.accessTokenSecret), nil
 	})
 	if err != nil {
-		return fmt.Errorf("parse failed: %w", err)
+		return "", fmt.Errorf("parse failed: %w", err)
 	}
 
 	if !token.Valid || token.Header["kid"] != _kidAccessToken {
-		return errors.New("invalid token")
+		return "", errors.New("invalid token")
 	}
 
-	return nil
+	id, err := m.extractClaimField(token, "sub")
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s", id), nil
 }
 
 // May return nil use Sprintf or pointer varriable to claim

@@ -10,7 +10,7 @@ auth:
   issuer: crypto-diary.com # e.g.
   refresh_token_lifetime: 168 # in hours
   refresh_token_secret: TnFVnbXaqpgmZhpbNcWJunp2CZNkmRLtxxdzkijvoqMtk7LpS2xp7pWitTDRFkXtZXKS22Es
-  access_token_lifetime: 5 # in minutes
+  access_token_lifetime: 120 # in minutes
   access_token_secret: fWoWCe9MfDihrPr4j7FH5dgy33kXdsRYVj9oWVHYQFynUWg9FSiRc3jMp9CtEJjXXYxAvrVb
 
 session_storage:

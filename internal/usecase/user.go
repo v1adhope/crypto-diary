@@ -34,18 +34,18 @@ func (uc *UserUseCase) SignUp(ctx context.Context, email, password string) error
 		Password: hashedClientPassword,
 	}
 
-	err = uc.repo.CreateUser(ctx, user)
+	err = uc.repo.Create(ctx, user)
 	if err != nil {
-		return fmt.Errorf("usecase: SignUp: CreateUser: %w", err)
+		return fmt.Errorf("usecase: SignUp: Create: %w", err)
 	}
 
 	return nil
 }
 
 func (uc *UserUseCase) SignIn(ctx context.Context, email, password string) (string, string, error) {
-	user, err := uc.repo.GetUser(ctx, email)
+	user, err := uc.repo.Get(ctx, email)
 	if err != nil {
-		return "", "", fmt.Errorf("usecase: SignIn: GetUser %w", err)
+		return "", "", fmt.Errorf("usecase: SignIn: Get %w", err)
 	}
 
 	err = uc.hasher.CompareHashAndPassword(user.Password, password)
@@ -85,16 +85,16 @@ func (uc *UserUseCase) ReissueTokens(ctx context.Context, clientToken string) (s
 	return refreshToken, accessToken, nil
 }
 
-func (uc *UserUseCase) CheckAuth(ctx context.Context, clientToken string) error {
+func (uc *UserUseCase) CheckAuth(ctx context.Context, clientToken string) (string, error) {
 	err := uc.session.CheckToken(ctx, clientToken)
 	if err != nil {
-		return fmt.Errorf("usecase: ReissueTokens: CheckToken: %w", err)
+		return "", fmt.Errorf("usecase: ReissueTokens: CheckToken: %w", err)
 	}
 
-	err = uc.auth.ValidateAccessToken(clientToken)
+	id, err := uc.auth.ValidateAccessToken(clientToken)
 	if err != nil {
-		return fmt.Errorf("usecase: RefreshTokens: ValidateToken: %w", err)
+		return "", fmt.Errorf("usecase: RefreshTokens: ValidateToken: %w", err)
 	}
 
-	return nil
+	return id, nil
 }

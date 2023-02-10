@@ -20,7 +20,7 @@ func NewUser(pg *postgres.Postgres) *UserRepo {
 	return &UserRepo{pg}
 }
 
-func (ur *UserRepo) CreateUser(ctx context.Context, user entity.User) error {
+func (ur *UserRepo) Create(ctx context.Context, user entity.User) error {
 	q := `INSERT INTO users(email, password)
         VALUES($1,$2)`
 
@@ -33,18 +33,18 @@ func (ur *UserRepo) CreateUser(ctx context.Context, user entity.User) error {
 				return entity.ErrUserAlreadyExists
 			}
 
-			return fmt.Errorf("repository: CreateUser: QyeryRow: PgErr: %s, %s", pgErr.Code, pgErr.Message)
+			return fmt.Errorf("repository: Create user: QyeryRow: PgErr: %s, %s", pgErr.Code, pgErr.Message)
 		}
 
-		return fmt.Errorf("repository: CreateUser: QueryRow: %w", err)
+		return fmt.Errorf("repository: Create user: QueryRow: %w", err)
 	}
 
 	return nil
 }
 
-func (ur *UserRepo) GetUser(ctx context.Context, email string) (*entity.User, error) {
+func (ur *UserRepo) Get(ctx context.Context, email string) (*entity.User, error) {
 	q := `SELECT *
-        FROM usr
+        FROM get_user 
         WHERE email = $1`
 
 	u := &entity.User{}
@@ -55,7 +55,7 @@ func (ur *UserRepo) GetUser(ctx context.Context, email string) (*entity.User, er
 			return nil, entity.ErrUserNotExists
 		}
 
-		return nil, fmt.Errorf("repository: GetUser: QueryRow: %w", err)
+		return nil, fmt.Errorf("repository: Get user: QueryRow: %w", err)
 	}
 
 	return u, nil
