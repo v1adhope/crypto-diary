@@ -7,29 +7,29 @@ import (
 )
 
 type Position struct {
-	ID            string  `json:"id,omitempty"`
-	OpenDate      string  `json:"openDate" validate:"required,datetime=2006/01/02"`
-	Pair          string  `json:"pair" validate:"required,max=12"`
-	Reason        string  `json:"reason" validate:"required,max=300"`
-	Strategically bool    `json:"strategically"`
-	Risk          float64 `json:"risk" validate:"required,gt=0,lt=100"`
-
-	//TODO: direction
-	Direction string `json:"direction" validate:"required"`
-
-	//TODO: custom validate
-	Deposit         string `json:"deposit" validate:"required"`
-	OpenPrice       string `json:"openPrice" validate:"required"`
-	StopLossPrice   string `json:"stopLossPrice" validate:"required"`
-	TakeProfitPrice string `json:"takeProfitPrice" validate:"required"`
-	ClosePrice      string `json:"closePrice"`
-
-	UserID string `json:"-" validate:"required"`
+	ID              string  `json:"id,omitempty"`
+	OpenDate        string  `json:"openDate" validate:"required,datetime=2006/01/02"`
+	Pair            string  `json:"pair" validate:"required,max=12"`
+	Reason          string  `json:"reason" validate:"required,max=300"`
+	Strategically   bool    `json:"strategically"`
+	Risk            float64 `json:"risk" validate:"required,gt=0,lt=100"`
+	Direction       string  `json:"direction" validate:"required,direction"`
+	Deposit         float64 `json:"deposit" validate:"required,gt=0"`
+	OpenPrice       float64 `json:"openPrice" validate:"required,gt=0"`
+	StopLossPrice   float64 `json:"stopLossPrice" validate:"required,gt=0"`
+	TakeProfitPrice float64 `json:"takeProfitPrice" validate:"required,gt=0"`
+	ClosePrice      float64 `json:"closePrice" validate:"gt=0"`
+	UserID          string  `json:"-" validate:"required"`
 }
 
 func (p *Position) ToEntity() *entity.Position {
 	strategically := fmt.Sprintf("%t", p.Strategically)
 	risk := fmt.Sprintf("%g", p.Risk)
+	deposit := fmt.Sprintf("%g", p.Deposit)
+	openPrice := fmt.Sprintf("%g", p.OpenPrice)
+	stopLossPrice := fmt.Sprintf("%g", p.StopLossPrice)
+	takeProfitPrice := fmt.Sprintf("%g", p.TakeProfitPrice)
+	closePrice := fmt.Sprintf("%g", p.ClosePrice)
 
 	return &entity.Position{
 		ID:              p.ID,
@@ -39,11 +39,11 @@ func (p *Position) ToEntity() *entity.Position {
 		Strategically:   strategically,
 		Risk:            risk,
 		Direction:       p.Direction,
-		Deposit:         p.Deposit,
-		OpenPrice:       p.OpenPrice,
-		StopLossPrice:   p.StopLossPrice,
-		TakeProfitPrice: p.TakeProfitPrice,
-		ClosePrice:      p.ClosePrice,
+		Deposit:         deposit,
+		OpenPrice:       openPrice,
+		StopLossPrice:   stopLossPrice,
+		TakeProfitPrice: takeProfitPrice,
+		ClosePrice:      closePrice,
 		UserID:          p.UserID,
 	}
 }

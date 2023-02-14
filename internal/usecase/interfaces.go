@@ -7,7 +7,6 @@ import (
 	"github.com/v1adhope/crypto-diary/internal/entity"
 )
 
-// TODO: value or poiner, JWT
 type (
 	User interface {
 		SignUp(ctx context.Context, email, password string) error
@@ -36,11 +35,10 @@ type (
 	}
 
 	PasswordHasher interface {
-		GenerateEncryptedPassword(password string) (string, error)
+		GenerateHashedPassword(password string) (string, error)
 		CompareHashAndPassword(hashedPassword, password string) error
 	}
 
-	//TODO
 	AuthManager interface {
 		//Returning Refresh, Access tokens and error
 		GenerateTokenPair(id string) (string, string, error)

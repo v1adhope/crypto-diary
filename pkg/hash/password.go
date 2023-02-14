@@ -8,7 +8,7 @@ import (
 )
 
 type PasswordHasher interface {
-	GenerateEncryptedPassword(password string) (string, error)
+	GenerateHashedPassword(password string) (string, error)
 	CompareHashAndPassword(hashedPassword, password string) error
 }
 
@@ -17,10 +17,10 @@ type Hash struct {
 }
 
 func New(salt string) *Hash {
-	return &Hash{salt: salt}
+	return &Hash{salt}
 }
 
-func (h *Hash) GenerateEncryptedPassword(password string) (string, error) {
+func (h *Hash) GenerateHashedPassword(password string) (string, error) {
 	hash := sha256.New()
 
 	if _, err := hash.Write([]byte(password)); err != nil {
@@ -31,7 +31,7 @@ func (h *Hash) GenerateEncryptedPassword(password string) (string, error) {
 }
 
 func (h *Hash) CompareHashAndPassword(hashedPassword, password string) error {
-	hashedClientPassword, err := h.GenerateEncryptedPassword(password)
+	hashedClientPassword, err := h.GenerateHashedPassword(password)
 	if err != nil {
 		return err
 	}

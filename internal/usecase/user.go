@@ -24,14 +24,14 @@ func NewUserCase(r UserRepo, h PasswordHasher, m AuthManager, s SessionStorage) 
 }
 
 func (uc *UserUseCase) SignUp(ctx context.Context, email, password string) error {
-	hashedClientPassword, err := uc.hasher.GenerateEncryptedPassword(password)
+	hashedPassword, err := uc.hasher.GenerateHashedPassword(password)
 	if err != nil {
 		return fmt.Errorf("usecase: SignUp: GenerateEncryptedPassword: %w", err)
 	}
 
 	user := entity.User{
 		Email:    email,
-		Password: hashedClientPassword,
+		Password: hashedPassword,
 	}
 
 	err = uc.repo.Create(ctx, user)

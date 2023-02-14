@@ -14,19 +14,25 @@ import (
 
 type positionRoutes struct {
 	h        *gin.RouterGroup
+	m        Middleware
 	validate *validator.Validate
 	useCase  usecase.Position
 	logger   logger.Logger
 }
 
 func newPositionRoutes(r *positionRoutes) {
-	h := r.h
+	h := r.h.Group("/position")
+
+	h.Use(r.m.AuthorizeJWT())
 	{
 		h.GET("/", r.GetAll)
 		h.POST("/", r.Create)
 		h.DELETE("/", r.Delete)
 		h.PUT("/", r.Replace)
 	}
+
+	r.validate.RegisterValidation("direction", validatePositionDirection)
+	r.validate.RegisterStructValidation(validatePosition, dto.Position{})
 }
 
 func (r *positionRoutes) GetAll(c *gin.Context) {

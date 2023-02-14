@@ -10,6 +10,10 @@ const (
 	_userCtx = "userID"
 )
 
+type Middleware interface {
+	AuthorizeJWT() gin.HandlerFunc
+}
+
 func (r *Router) AuthorizeJWT() gin.HandlerFunc {
 	const _bearerSchema = "Bearer "
 
