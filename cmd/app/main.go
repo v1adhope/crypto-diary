@@ -51,6 +51,10 @@ func main() {
 		Session: sessionStorage,
 	})
 
+	if cfg.GinMode == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	handler := gin.New()
 
 	v1.NewRouter(&v1.Router{
@@ -60,5 +64,7 @@ func main() {
 		Validate: validate,
 	})
 
-	httpserver.New(handler, cfg.Server, logger)
+	srv := httpserver.New(handler, cfg.Server)
+
+	srv.Run()
 }

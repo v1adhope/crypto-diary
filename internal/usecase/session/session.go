@@ -17,8 +17,6 @@ func New(client *rds.Redis) *Session {
 }
 
 func (s *Session) AddToBlackList(ctx context.Context, token string, ttl time.Duration) error {
-	ttl *= time.Hour
-
 	err := s.Client.Set(ctx, token, "", ttl).Err()
 	if err != nil {
 		return fmt.Errorf("couldn't add to the blacklist: %w", err)

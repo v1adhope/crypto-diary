@@ -48,7 +48,7 @@ func NewClient(cfg *Config) (*Postgres, error) {
 		}
 		log.Printf("postgres: ping failed: attempts left %d: %s", cfg.ConnAttempts, err)
 
-		time.Sleep(cfg.ConnTimeout * time.Second)
+		time.Sleep(cfg.ConnTimeout)
 
 		cfg.ConnAttempts--
 	}

@@ -12,6 +12,7 @@ type (
 		SignUp(ctx context.Context, email, password string) error
 		SignIn(ctx context.Context, email, password string) (string, string, error)
 		ReissueTokens(ctx context.Context, clientToken string) (string, string, error)
+		SignOut(ctx context.Context, clientToken string) error
 		CheckAuth(ctx context.Context, clientToken string) (string, error)
 	}
 

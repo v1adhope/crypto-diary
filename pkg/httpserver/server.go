@@ -2,13 +2,12 @@ package httpserver
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/v1adhope/crypto-diary/pkg/logger"
 )
 
 type Config struct {
@@ -18,35 +17,53 @@ type Config struct {
 	WriteTimeout    time.Duration `mapstructure:"write_timeout"`
 }
 
-// TODO: Decomposition
-func New(h http.Handler, cfg *Config, logger *logger.Log) {
-	srv := &http.Server{
+type Server struct {
+	server          *http.Server
+	shutdownTimeout time.Duration
+}
+
+func New(h http.Handler, cfg *Config) *Server {
+	httpServer := &http.Server{
 		Addr:         cfg.Socket,
 		Handler:      h,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
 	}
 
+	return &Server{
+		server:          httpServer,
+		shutdownTimeout: cfg.ShutdownTimeout,
+	}
+}
+
+func (s *Server) Run() {
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatal(err, "listen and serve")
+		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen and serve: %s", err)
 		}
 	}()
 
-	// Graceful shutdown
+	s.gracefulShutdown()
+}
+
+func (s *Server) gracefulShutdown() {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	logger.Info("shutdown server ...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout*time.Second)
+	log.Printf("shutdown server ...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		logger.Fatal(err, "server shutdown")
+
+	if err := s.server.Shutdown(ctx); err != nil {
+		log.Fatalf("server shutdown: %s", err)
 	}
+
 	select {
 	case <-ctx.Done():
-		logger.Info("timeout of %d seconds", cfg.ShutdownTimeout)
+		log.Printf("timeout of %d seconds", s.shutdownTimeout)
 	}
-	logger.Info("server exiting")
+
+	log.Printf("server exiting")
 }

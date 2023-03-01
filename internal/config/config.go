@@ -15,6 +15,7 @@ import (
 
 type Config struct {
 	LogLevel       string             `mapstructure:"log_level"`
+	GinMode        string             `mapstructure:"gin_mode"`
 	Server         *httpserver.Config `mapstructure:"server"`
 	Storage        *postgres.Config   `mapstructure:"storage"`
 	PasswordSecret string             `mapstructure:"password_secret"`

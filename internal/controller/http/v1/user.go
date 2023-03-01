@@ -25,6 +25,7 @@ func newUserRoutes(r *userRoutes) {
 		h.POST("/signup", r.signUp)
 		h.POST("/signin", r.signIn)
 		h.POST("/refresh", r.refreshTokens)
+		h.POST("/signout", r.signOut)
 	}
 }
 
@@ -118,4 +119,22 @@ func (r *userRoutes) refreshTokens(c *gin.Context) {
 		"refreshToken": refreshToken,
 		"accessToken":  accessToken,
 	})
+}
+
+func (r *userRoutes) signOut(c *gin.Context) {
+	clientToken := &dto.RefreshToken{}
+
+	if err := c.ShouldBindJSON(clientToken); err != nil {
+		r.logger.Debug(err, "http/v1: signOut: ShouldBindJSON")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": "invalid token"})
+		return
+	}
+
+	if err := r.useCase.SignOut(c.Request.Context(), clientToken.Token); err != nil {
+		r.logger.Error(err, "http/v1: signOut: SignOut")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"msg": "invalid token"})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

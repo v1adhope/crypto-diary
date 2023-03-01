@@ -36,9 +36,9 @@ func newPositionRoutes(r *positionRoutes) {
 }
 
 func (r *positionRoutes) GetAll(c *gin.Context) {
-	id := c.GetString(_userCtx)
+	userID := c.GetString(_userCtxKey)
 
-	positions, err := r.useCase.GetAll(c.Request.Context(), id)
+	positions, err := r.useCase.GetAll(c.Request.Context(), userID)
 	if err != nil {
 		r.logger.Debug(err, "http/v1: GetAll position: GetAll")
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -48,7 +48,7 @@ func (r *positionRoutes) GetAll(c *gin.Context) {
 }
 
 func (r *positionRoutes) Create(c *gin.Context) {
-	userID := c.GetString(_userCtx)
+	userID := c.GetString(_userCtxKey)
 
 	positionDTO := &dto.Position{
 		UserID: userID,
@@ -79,7 +79,7 @@ func (r *positionRoutes) Create(c *gin.Context) {
 }
 
 func (r *positionRoutes) Delete(c *gin.Context) {
-	userID := c.GetString(_userCtx)
+	userID := c.GetString(_userCtxKey)
 
 	positionDTO := &dto.PositionDelete{}
 
@@ -105,7 +105,7 @@ func (r *positionRoutes) Delete(c *gin.Context) {
 }
 
 func (r *positionRoutes) Replace(c *gin.Context) {
-	userID := c.GetString(_userCtx)
+	userID := c.GetString(_userCtxKey)
 
 	positionDTO := &dto.Position{
 		UserID: userID,

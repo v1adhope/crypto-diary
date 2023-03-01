@@ -62,19 +62,9 @@ func (uc *UserUseCase) SignIn(ctx context.Context, email, password string) (stri
 }
 
 func (uc *UserUseCase) ReissueTokens(ctx context.Context, clientToken string) (string, string, error) {
-	err := uc.session.CheckToken(ctx, clientToken)
+	id, err := uc.addToBlackList(ctx, clientToken)
 	if err != nil {
-		return "", "", fmt.Errorf("usecase: ReissueTokens: CheckToken: %w", err)
-	}
-
-	id, lifetime, err := uc.auth.ValidateRefreshToken(clientToken)
-	if err != nil {
-		return "", "", fmt.Errorf("usecase: RefreshTokens: ValidateToken: %w", err)
-	}
-
-	err = uc.session.AddToBlackList(ctx, clientToken, lifetime)
-	if err != nil {
-		return "", "", fmt.Errorf("usecase: ReissueTokens: AddToBlackList: %w", err)
+		return "", "", fmt.Errorf("usecase: ReissueTokens: addToBlackList: %w", err)
 	}
 
 	refreshToken, accessToken, err := uc.auth.GenerateTokenPair(id)
@@ -85,15 +75,43 @@ func (uc *UserUseCase) ReissueTokens(ctx context.Context, clientToken string) (s
 	return refreshToken, accessToken, nil
 }
 
+func (uc *UserUseCase) SignOut(ctx context.Context, clientToken string) error {
+	_, err := uc.addToBlackList(ctx, clientToken)
+	if err != nil {
+		return fmt.Errorf("usecase: SignOut: addToBlackList: %w", err)
+	}
+
+	return nil
+}
+
+func (uc *UserUseCase) addToBlackList(ctx context.Context, clientToken string) (string, error) {
+	err := uc.session.CheckToken(ctx, clientToken)
+	if err != nil {
+		return "", fmt.Errorf("CheckToken: %w", err)
+	}
+
+	id, lifetime, err := uc.auth.ValidateRefreshToken(clientToken)
+	if err != nil {
+		return "", fmt.Errorf("ValidateRefreshToken: %w", err)
+	}
+
+	err = uc.session.AddToBlackList(ctx, clientToken, lifetime)
+	if err != nil {
+		return "", fmt.Errorf("AddToBlackList: %w", err)
+	}
+
+	return id, nil
+}
+
 func (uc *UserUseCase) CheckAuth(ctx context.Context, clientToken string) (string, error) {
 	err := uc.session.CheckToken(ctx, clientToken)
 	if err != nil {
-		return "", fmt.Errorf("usecase: ReissueTokens: CheckToken: %w", err)
+		return "", fmt.Errorf("usecase: CheckAuth: CheckToken: %w", err)
 	}
 
 	id, err := uc.auth.ValidateAccessToken(clientToken)
 	if err != nil {
-		return "", fmt.Errorf("usecase: RefreshTokens: ValidateToken: %w", err)
+		return "", fmt.Errorf("usecase: CheckAuth: ValidateAccessToken: %w", err)
 	}
 
 	return id, nil

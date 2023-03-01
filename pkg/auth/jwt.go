@@ -87,7 +87,7 @@ func (m *Manager) generateRefreshToken(id, uuidv string) (string, error) {
 		jwt.RegisteredClaims{
 			ID:        uuidv,
 			Subject:   id,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshTokenLifetime * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshTokenLifetime)),
 			Issuer:    m.issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
@@ -113,7 +113,7 @@ func (m *Manager) generateAccessToken(id, uuidv string) (string, error) {
 		jwt.RegisteredClaims{
 			ID:        uuidv,
 			Subject:   id,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTokenLifetime * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTokenLifetime)),
 			Issuer:    m.issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},

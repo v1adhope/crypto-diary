@@ -1,16 +1,17 @@
 log_level: debug
+# gin_mode: release
 
 server:
   socket: 0.0.0.0:8080
-  shutdown_timeout: 0 # in seconds
-  read_timeout: 10 # in seconds
-  write_timeout: 10 # in seconds
+  shutdown_timeout: 3s
+  read_timeout: 15s
+  write_timeout: 15s
 
 auth:
   issuer: crypto-diary.com # e.g.
-  refresh_token_lifetime: 168 # in hours
+  refresh_token_lifetime: 168h
   refresh_token_secret: TnFVnbXaqpgmZhpbNcWJunp2CZNkmRLtxxdzkijvoqMtk7LpS2xp7pWitTDRFkXtZXKS22Es
-  access_token_lifetime: 120 # in minutes
+  access_token_lifetime: 15m
   access_token_secret: fWoWCe9MfDihrPr4j7FH5dgy33kXdsRYVj9oWVHYQFynUWg9FSiRc3jMp9CtEJjXXYxAvrVb
 
 session_storage:
@@ -26,5 +27,5 @@ storage:
   socket: storage:5432
   database: crypto_diary
   conn_attempts: 10
-  conn_timeout: 3 # in seconds
+  conn_timeout: 3s
   pool_size: 1

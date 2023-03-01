@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	_userCtx = "userID"
+	_userCtxKey = "userID"
 )
 
 type Middleware interface {
@@ -33,7 +33,7 @@ func (r *Router) AuthorizeJWT() gin.HandlerFunc {
 			return
 		}
 
-		c.Set(_userCtx, id)
+		c.Set(_userCtxKey, id)
 
 		c.Next()
 	}
