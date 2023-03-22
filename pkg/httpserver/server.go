@@ -51,7 +51,7 @@ func (s *Server) gracefulShutdown() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Printf("shutdown server ...")
+	log.Print("shutdown server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 	defer cancel()
@@ -65,5 +65,5 @@ func (s *Server) gracefulShutdown() {
 		log.Printf("timeout of %d seconds", s.shutdownTimeout)
 	}
 
-	log.Printf("server exiting")
+	log.Print("server exiting")
 }

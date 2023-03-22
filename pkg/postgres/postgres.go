@@ -23,7 +23,7 @@ type Postgres struct {
 	Pool *pgxpool.Pool
 }
 
-func NewClient(cfg *Config) (*Postgres, error) {
+func NewClient(ctx context.Context, cfg *Config) (*Postgres, error) {
 	pg := &Postgres{}
 
 	dsn := fmt.Sprintf("postgresql://%s:%s@%s/%s", cfg.Username, cfg.Password, cfg.Socket, cfg.Database)
@@ -42,7 +42,7 @@ func NewClient(cfg *Config) (*Postgres, error) {
 
 	for cfg.ConnAttempts > 0 {
 
-		err = pg.Pool.Ping(context.Background())
+		err = pg.Pool.Ping(ctx)
 		if err == nil {
 			break
 		}

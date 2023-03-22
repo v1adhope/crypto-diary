@@ -20,9 +20,9 @@ import (
 
 func main() {
 	cfg := config.GetConfig()
-	logger := logger.New(cfg.LogLevel)
+	logger := logger.New(cfg.Logger)
 
-	pgClient, err := postgres.NewClient(cfg.Storage)
+	pgClient, err := postgres.NewClient(context.Background(), cfg.Storage)
 	if err != nil {
 		logger.Fatal(err, "main: pgClient")
 	}

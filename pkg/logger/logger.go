@@ -3,10 +3,25 @@ package logger
 import (
 	"io"
 	"os"
-	"time"
 
 	"github.com/rs/zerolog"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
+
+const (
+	_timeFormat = "02 Jan 06 15:04"
+	_maxSize    = 100
+	_maxAge     = 30
+	_maxBackups = 5
+)
+
+type Config struct {
+	LogLevel           string `mapstructure:"log_level"`
+	FileName           string `mapstructure:"file_name"`
+	IsConsoleLogEnable bool   `mapstructure:"is_console_log_enable"`
+	IsFileLogEnable    bool   `mapstructure:"is_file_log_enable"`
+	IsCompress         bool   `mapstructure:"is_compress"`
+}
 
 type Logger interface {
 	Fatal(err error, msg string, args ...interface{})
@@ -20,10 +35,10 @@ type Log struct {
 	*zerolog.Logger
 }
 
-func New(level string) *Log {
+func New(cfg *Config) *Log {
 	var l zerolog.Level
 
-	switch level {
+	switch cfg.LogLevel {
 	default:
 		l = zerolog.InfoLevel
 	case "error":
@@ -39,12 +54,28 @@ func New(level string) *Log {
 	zerolog.SetGlobalLevel(l)
 	zerolog.ErrorFieldName = "err"
 
-	var output io.Writer = zerolog.ConsoleWriter{
-		Out:        os.Stderr,
-		TimeFormat: time.RFC822Z,
+	var writers []io.Writer
+
+	if cfg.IsConsoleLogEnable {
+		writers = append(writers, zerolog.ConsoleWriter{
+			Out:        os.Stderr,
+			TimeFormat: _timeFormat,
+		})
 	}
 
-	logger := zerolog.New(output).
+	if cfg.IsFileLogEnable {
+		writers = append(writers, &lumberjack.Logger{
+			Filename:   cfg.FileName,
+			MaxSize:    _maxSize,
+			MaxAge:     _maxAge,
+			MaxBackups: _maxBackups,
+			Compress:   cfg.IsCompress,
+		})
+	}
+
+	multi := zerolog.MultiLevelWriter(writers...)
+
+	logger := zerolog.New(multi).
 		With().
 		Timestamp().
 		Logger()

@@ -1,13 +1,13 @@
 package repository
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/v1adhope/crypto-diary/internal/entity"
 )
 
-const timeModel = "2006-01-02"
+const _timeModel = "2006-01-02"
 
 type PositionDTO struct {
 	ID              string
@@ -26,12 +26,12 @@ type PositionDTO struct {
 }
 
 func (pd *PositionDTO) ToEntity() *entity.Position {
-	opendate := fmt.Sprintf("%s", pd.OpenDate.Time.Format(timeModel))
-	strategically := fmt.Sprintf("%t", pd.Strategically)
+	opendate := pd.OpenDate.Time.Format(_timeModel)
+	strategically := strconv.FormatBool(pd.Strategically)
 
 	var closePrice string
 	if pd.ClosePrice.Valid {
-		closePrice = fmt.Sprintf("%s", pd.ClosePrice.String)
+		closePrice = pd.ClosePrice.String
 	}
 
 	return &entity.Position{

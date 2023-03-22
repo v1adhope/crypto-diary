@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"fmt"
+	"strconv"
 
 	"github.com/v1adhope/crypto-diary/internal/entity"
 )
@@ -23,29 +23,25 @@ type Position struct {
 }
 
 func (p *Position) ToEntity() *entity.Position {
-	strategically := fmt.Sprintf("%t", p.Strategically)
-	risk := fmt.Sprintf("%g", p.Risk)
-	deposit := fmt.Sprintf("%g", p.Deposit)
-	openPrice := fmt.Sprintf("%g", p.OpenPrice)
-	stopLossPrice := fmt.Sprintf("%g", p.StopLossPrice)
-	takeProfitPrice := fmt.Sprintf("%g", p.TakeProfitPrice)
-	closePrice := fmt.Sprintf("%g", p.ClosePrice)
-
 	return &entity.Position{
 		ID:              p.ID,
 		OpenDate:        p.OpenDate,
 		Pair:            p.Pair,
 		Reason:          p.Reason,
-		Strategically:   strategically,
-		Risk:            risk,
+		Strategically:   strconv.FormatBool(p.Strategically),
+		Risk:            strToFloat(p.Risk),
 		Direction:       p.Direction,
-		Deposit:         deposit,
-		OpenPrice:       openPrice,
-		StopLossPrice:   stopLossPrice,
-		TakeProfitPrice: takeProfitPrice,
-		ClosePrice:      closePrice,
+		Deposit:         strToFloat(p.Deposit),
+		OpenPrice:       strToFloat(p.OpenPrice),
+		StopLossPrice:   strToFloat(p.StopLossPrice),
+		TakeProfitPrice: strToFloat(p.TakeProfitPrice),
+		ClosePrice:      strToFloat(p.ClosePrice),
 		UserID:          p.UserID,
 	}
+}
+
+func strToFloat(s float64) string {
+	return strconv.FormatFloat(s, 'f', -1, 64)
 }
 
 type PositionDelete struct {

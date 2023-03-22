@@ -1,5 +1,11 @@
-log_level: debug
 # gin_mode: release
+
+logger:
+  log_level: debug
+  file_name: "logs/lumberjack.log"
+  is_console_log_enable: true
+  is_file_log_enable: false
+  is_compress: false
 
 server:
   socket: 0.0.0.0:8080
@@ -26,6 +32,6 @@ storage:
   password: designer
   socket: storage:5432
   database: crypto_diary
-  conn_attempts: 10
+  conn_attempts: 15
   conn_timeout: 3s
-  pool_size: 1
+  pool_size: 100

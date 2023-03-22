@@ -1,7 +1,7 @@
 .SILENT:
 
 build: mod verify
-	go build -o .bin/main ./cmd/app
+	go build -o .bin/main -race ./cmd/app
 
 mod:
 	go mod tidy -v
@@ -15,8 +15,7 @@ run: compose-build
 stop:
 	docker compose  down
 
-restart:
-	docker compose  restart
+restart: stop run
 
 compose-build: build
 	docker compose  build

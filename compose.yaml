@@ -3,6 +3,8 @@ services:
     build: .
     container_name: app
     image: crypto-diary-app
+    volumes:
+      - ./logs:/app/logs
     ports:
       - 8080:8080
     depends_on:

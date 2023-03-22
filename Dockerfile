@@ -5,4 +5,6 @@ WORKDIR /app
 COPY configs ./configs/
 COPY ./.bin/main ./.bin/
 
-CMD ["./.bin/main"]
+RUN mkdir logs
+
+ENTRYPOINT ["./.bin/main"]
