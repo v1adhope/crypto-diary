@@ -34,4 +34,4 @@ storage:
   database: crypto_diary
   conn_attempts: 15
   conn_timeout: 3s
-  pool_size: 100
+  pool_size: 99 # one for attach

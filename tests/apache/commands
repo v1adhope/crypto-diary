@@ -1,0 +1,1 @@
+ab -H 'Authorization:Bearer '  -k -n 10000 -c 1000 -T application/json -p post-position.json http://localhost:8080/v1/position/

@@ -50,7 +50,8 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 
 func (pr *PositionRepo) FindAll(ctx context.Context, id string) ([]entity.Position, error) {
 	q := `SELECT * FROM get_all_positions
-        WHERE user_id = $1`
+        WHERE user_id = $1
+        ORDER by position_id ASC`
 
 	rows, err := pr.Pool.Query(ctx, q, id)
 	if err != nil {
