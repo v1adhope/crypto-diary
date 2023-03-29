@@ -9,7 +9,7 @@ logger:
 
 server:
   socket: 0.0.0.0:8080
-  shutdown_timeout: 3s
+  shutdown_timeout: 0s
   read_timeout: 15s
   write_timeout: 15s
 

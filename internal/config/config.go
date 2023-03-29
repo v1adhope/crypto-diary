@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/spf13/viper"
-	"github.com/v1adhope/crypto-diary/pkg/auth"
+	"github.com/v1adhope/crypto-diary/internal/pkg/auth"
 	"github.com/v1adhope/crypto-diary/pkg/httpserver"
 	"github.com/v1adhope/crypto-diary/pkg/logger"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"

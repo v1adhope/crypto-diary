@@ -2,9 +2,10 @@ package hash
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/v1adhope/crypto-diary/internal/entity"
 )
 
 type PasswordHasher interface {
@@ -24,7 +25,7 @@ func (h *Hash) GenerateHashedPassword(password string) (string, error) {
 	hash := sha256.New()
 
 	if _, err := hash.Write([]byte(password)); err != nil {
-		return "", err
+		return "", fmt.Errorf("hash: GenerateHashedPassword: Write: %w", err)
 	}
 
 	return fmt.Sprintf("%x", hash.Sum([]byte(h.salt))), nil
@@ -33,12 +34,12 @@ func (h *Hash) GenerateHashedPassword(password string) (string, error) {
 func (h *Hash) CompareHashAndPassword(hashedPassword, password string) error {
 	hashedClientPassword, err := h.GenerateHashedPassword(password)
 	if err != nil {
-		return err
+		return fmt.Errorf("hash: CompareHashAndPassword: GenerateHashedPassword: %w", err)
 	}
 
 	res := strings.Compare(hashedPassword, hashedClientPassword)
 	if res != 0 {
-		return errors.New("passwords do not match")
+		return fmt.Errorf("hash: CompareHashAndPassword: Compare: %w", entity.ErrWrongPassword)
 	}
 
 	return nil

@@ -13,7 +13,6 @@ services:
 
   storage:
     image: postgres:14.6
-    restart: always
     container_name: storage
     environment:
       POSTGRES_DB: crypto_diary
@@ -26,7 +25,6 @@ services:
 
   session:
     image: redis:latest
-    restart: always
     container_name: session
     ports:
       - 6379:6379

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/pkg/rds"
 )
 
@@ -19,7 +20,7 @@ func New(client *rds.Redis) *Session {
 func (s *Session) AddToBlackList(ctx context.Context, token string, ttl time.Duration) error {
 	err := s.Client.Set(ctx, token, "", ttl).Err()
 	if err != nil {
-		return fmt.Errorf("couldn't add to the blacklist: %w", err)
+		return fmt.Errorf("session: AddToBlackList: couldn't add to the blacklist: %w", err)
 	}
 
 	return nil
@@ -32,7 +33,7 @@ func (s *Session) CheckToken(ctx context.Context, token string) error {
 	}
 
 	if isExists != 0 {
-		return fmt.Errorf("token in the blocklist: %s", token)
+		return fmt.Errorf("session: CheckToken: %w: %s", entity.ErrTokenInTheBlocklisk, token)
 	}
 
 	return nil

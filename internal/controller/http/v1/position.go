@@ -1,20 +1,18 @@
 package v1
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/v1adhope/crypto-diary/internal/controller/http/dto"
-	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/internal/usecase"
 	"github.com/v1adhope/crypto-diary/pkg/logger"
 )
 
 type positionRoutes struct {
 	h        *gin.RouterGroup
-	m        Middleware
+	m        authMiddleware
 	validate *validator.Validate
 	useCase  usecase.Position
 	logger   logger.Logger
@@ -23,7 +21,7 @@ type positionRoutes struct {
 func newPositionRoutes(r *positionRoutes) {
 	h := r.h.Group("/position")
 
-	h.Use(r.m.AuthorizeJWT())
+	h.Use(r.m.tokenHandler())
 	{
 		h.GET("/", r.GetAll)
 		h.POST("/", r.Create)
@@ -36,19 +34,26 @@ func newPositionRoutes(r *positionRoutes) {
 }
 
 func (r *positionRoutes) GetAll(c *gin.Context) {
-	userID := c.GetString(_userCtxKey)
+	userID, err := getUserID(c)
+	if err != nil {
+		return
+	}
 
 	positions, err := r.useCase.GetAll(c.Request.Context(), userID)
 	if err != nil {
 		r.logger.Debug(err, "http/v1: GetAll position: GetAll")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(err)
+		return
 	}
 
 	c.JSON(http.StatusOK, positions)
 }
 
 func (r *positionRoutes) Create(c *gin.Context) {
-	userID := c.GetString(_userCtxKey)
+	userID, err := getUserID(c)
+	if err != nil {
+		return
+	}
 
 	positionDTO := &dto.Position{
 		UserID: userID,
@@ -56,22 +61,22 @@ func (r *positionRoutes) Create(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(positionDTO); err != nil {
 		r.logger.Debug(err, "http/v1: Create position: ShouldBindJSON")
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": "invalid position"})
+		catchErrorBind(c, err)
 		return
 	}
 
 	if err := r.validate.Struct(positionDTO); err != nil {
 		r.logger.Debug(err, "http/v1: Create position: Struct")
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": "invalid position"})
+		catchErrorPublic(c, err)
 		return
 	}
 
 	position := positionDTO.ToEntity()
 
-	err := r.useCase.Create(c.Request.Context(), position)
+	err = r.useCase.Create(c.Request.Context(), position)
 	if err != nil {
 		r.logger.Debug(err, "http/v1: Create position: Create")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 
@@ -79,25 +84,22 @@ func (r *positionRoutes) Create(c *gin.Context) {
 }
 
 func (r *positionRoutes) Delete(c *gin.Context) {
-	userID := c.GetString(_userCtxKey)
+	userID, err := getUserID(c)
+	if err != nil {
+		return
+	}
 
 	positionDTO := &dto.PositionDelete{}
 
 	if err := c.ShouldBindJSON(positionDTO); err != nil {
 		r.logger.Debug(err, "http/v1: Delete position: ShouldBindJSON")
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": "invalid position id"})
+		catchErrorBind(c, err)
 		return
 	}
 
 	if err := r.useCase.Delete(c.Request.Context(), userID, positionDTO.ID); err != nil {
-		if errors.Is(err, entity.ErrNoFoundPosition) {
-			r.logger.Debug(err, "http/v1: Delete position: Delete")
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": entity.ErrNoFoundPosition.Error()})
-			return
-		}
-
 		r.logger.Debug(err, "http/v1: Delete position: Delete")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 
@@ -105,7 +107,10 @@ func (r *positionRoutes) Delete(c *gin.Context) {
 }
 
 func (r *positionRoutes) Replace(c *gin.Context) {
-	userID := c.GetString(_userCtxKey)
+	userID, err := getUserID(c)
+	if err != nil {
+		return
+	}
 
 	positionDTO := &dto.Position{
 		UserID: userID,
@@ -113,27 +118,21 @@ func (r *positionRoutes) Replace(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(positionDTO); err != nil {
 		r.logger.Debug(err, "http/v1: Replace position: ShouldBindJSON")
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": "invalid position"})
+		catchErrorBind(c, err)
 		return
 	}
 
 	if err := r.validate.Struct(positionDTO); err != nil {
 		r.logger.Debug(err, "http/v1: Replace position: Struct")
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"msg": "invalid position"})
+		catchErrorPublic(c, err)
 		return
 	}
 
 	position := positionDTO.ToEntity()
 
 	if err := r.useCase.Replace(c.Request.Context(), position); err != nil {
-		if errors.Is(err, entity.ErrNothingToChange) {
-			r.logger.Debug(err, "http/v1: Replace position: Replace")
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"msg": entity.ErrNothingToChange.Error()})
-			return
-		}
-
 		r.logger.Debug(err, "http/v1: Replace position: Replace")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 

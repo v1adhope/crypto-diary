@@ -22,6 +22,8 @@ func NewRouter(r *Router) {
 	r.Handler.SetTrustedProxies(nil)
 
 	h := r.Handler.Group("/v1")
+
+	h.Use(errorHandler())
 	{
 		newUserRoutes(&userRoutes{
 			h:        h,

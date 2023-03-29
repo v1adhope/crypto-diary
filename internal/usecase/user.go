@@ -50,7 +50,7 @@ func (uc *UserUseCase) SignIn(ctx context.Context, email, password string) (stri
 
 	err = uc.hasher.CompareHashAndPassword(user.Password, password)
 	if err != nil {
-		return "", "", fmt.Errorf("usecase: SignIn: CompareHashAndPassword %w", entity.ErrWrongPassword)
+		return "", "", fmt.Errorf("usecase: SignIn: CompareHashAndPassword %w", err)
 	}
 
 	refreshToken, accessToken, err := uc.auth.GenerateTokenPair(user.ID)

@@ -9,16 +9,11 @@ mod:
 verify:
 	go mod verify
 
-run: compose-build
-	docker compose  up
+run: stop build
+	docker compose  up --build
 
 stop:
-	docker compose  down
-
-restart: stop run
-
-compose-build: build
-	docker compose  build
+	docker compose  down -v
 
 .PHONY: cover
 cover:

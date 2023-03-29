@@ -1,3 +1,4 @@
+// TODO: Optimization
 package auth
 
 import (
@@ -7,6 +8,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/v1adhope/crypto-diary/internal/entity"
 )
 
 type Config struct {
@@ -74,7 +76,7 @@ func generateUUIDv4() (string, error) {
 		return "", fmt.Errorf("failed to generate UUID: %w", err)
 	}
 
-	return fmt.Sprintf("%s", u4), nil
+	return u4.String(), nil
 }
 
 // Tokens can change their fields, so there are duplications
@@ -134,22 +136,22 @@ func (m *Manager) ValidateRefreshToken(clientToken string) (string, time.Duratio
 	token, err := jwt.Parse(clientToken, func(token *jwt.Token) (interface{}, error) {
 
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("kid %v: unexpected signing method %v", token.Header["kid"], token.Header["alg"])
+			return nil, fmt.Errorf("%w: kid %v: unexpected signing method %v", entity.ErrTokenInvalid, token.Header["kid"], token.Header["alg"])
 		}
 
 		return []byte(m.refreshTokenSecret), nil
 	})
 	if err != nil {
-		return "", 0, fmt.Errorf("parse failed: %w", err)
+		return "", 0, fmt.Errorf("%w: parse failed: %s", entity.ErrTokenInvalid, err)
 	}
 
 	if !token.Valid || token.Header["kid"] != _kidRefreshToken {
-		return "", 0, errors.New("invalid token")
+		return "", 0, entity.ErrTokenInvalid
 	}
 
 	id, err := m.extractClaimField(token, "sub")
 	if err != nil {
-		return "", 0, err
+		return "", 0, fmt.Errorf("%w: %s", entity.ErrTokenInvalid, err)
 	}
 
 	return id.(string), m.refreshTokenLifetime, nil
