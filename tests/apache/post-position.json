@@ -1,13 +1,13 @@
 {
-    "openDate": "2022/12/19",
-    "pair": "btc/ustd",
-    "reason": "Some reason",
-    "strategically": true,
-    "risk": 3.12,
-    "direction": "short",
-    "deposit": 100,
-    "openPrice": 20000,
-    "stopLossPrice": 21000,
-    "takeProfitPrice": 15000,
-    "closePrice": 15000
+  "openDate": "2022-12-19",
+  "pair": "btc/ustd",
+  "reason": "Some reason",
+  "strategically": "true",
+  "risk": "3.12",
+  "direction": "short",
+  "deposit": "100",
+  "openPrice": "20000",
+  "stopLossPrice": "21000",
+  "takeProfitPrice": "15000",
+  "closePrice": "21000"
 }

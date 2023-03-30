@@ -13,5 +13,5 @@ type Position struct {
 	StopLossPrice   string `json:"stopLossPrice"`
 	TakeProfitPrice string `json:"takeProfitPrice"`
 	ClosePrice      string `json:"closePrice"`
-	UserID          string `json:"userID"`
+	UserID          string `json:"-"`
 }

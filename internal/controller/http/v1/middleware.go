@@ -75,7 +75,7 @@ func errorHandler() gin.HandlerFunc {
 			}
 
 			if err.IsType(gin.ErrorTypePrivate) {
-				//IFNO: User
+				//INFO: User
 				if errors.Is(err, entity.ErrUserAlreadyExists) {
 					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 						"error": entity.ErrUserAlreadyExists.Error(),

@@ -1,12 +1,65 @@
 package v1
 
 import (
+	"strconv"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/v1adhope/crypto-diary/internal/controller/http/dto"
 )
 
+func registerValidations(v *validator.Validate) {
+	v.RegisterValidation("direction", validatePositionDirection)
+	v.RegisterValidation("strategically", validatePositionStrategically)
+	v.RegisterValidation("risk", validatePositionRisk)
+	v.RegisterValidation("deposit", validatePositionDeposit)
+	v.RegisterValidation("closePrice", validatePositionClosePrice)
+	v.RegisterStructValidation(validatePosition, dto.Position{})
+}
+
 func validatePositionDirection(fl validator.FieldLevel) bool {
-	if fl.Field().String() == "long" || fl.Field().String() == "short" {
+	direction := fl.Field().String()
+	if direction == "long" || direction == "short" {
+		return true
+	}
+
+	return false
+}
+
+func validatePositionStrategically(fls validator.FieldLevel) bool {
+	_, err := strconv.ParseBool(fls.Field().String())
+	if err == nil {
+		return true
+	}
+
+	return false
+}
+
+func validatePositionRisk(fls validator.FieldLevel) bool {
+	risk, err := strToFloat(fls.Field().String())
+	if err == nil && risk > 0 && risk <= 100 {
+		return true
+	}
+
+	return false
+}
+
+func validatePositionDeposit(fls validator.FieldLevel) bool {
+	deposit, err := strToFloat(fls.Field().String())
+	if err == nil && deposit > 0 {
+		return true
+	}
+
+	return false
+}
+
+func validatePositionClosePrice(fls validator.FieldLevel) bool {
+	tmp := fls.Field().String()
+	if tmp == "" {
+		return true
+	}
+
+	closePrice, err := strToFloat(tmp)
+	if err == nil && closePrice >= 0 {
 		return true
 	}
 
@@ -14,24 +67,48 @@ func validatePositionDirection(fl validator.FieldLevel) bool {
 }
 
 func validatePosition(sl validator.StructLevel) {
-	position := sl.Current().Interface().(dto.Position)
+	p := sl.Current().Interface().(dto.Position)
 
-	switch position.Direction {
+	openPrice, err := strToFloat(p.OpenPrice)
+	if err != nil || openPrice < 0 {
+		sl.ReportError(p.OpenPrice, "OpenPrice", "", "", "")
+	}
+
+	stopLossPrice, err := strToFloat(p.StopLossPrice)
+	if err != nil || stopLossPrice < 0 {
+		sl.ReportError(p.StopLossPrice, "StopLossPrice", "", "", "")
+	}
+
+	takeProfitPrice, err := strToFloat(p.TakeProfitPrice)
+	if err != nil || takeProfitPrice < 0 {
+		sl.ReportError(p.TakeProfitPrice, "TakeProfitPrice", "", "", "")
+	}
+
+	switch p.Direction {
 	case "long":
-		if position.StopLossPrice > position.OpenPrice {
-			sl.ReportError(position.StopLossPrice, "StopLossPrice", "", "", "")
+		if stopLossPrice > openPrice {
+			sl.ReportError(p.StopLossPrice, "StopLossPrice", "", "", "")
 		}
 
-		if position.TakeProfitPrice < position.OpenPrice {
-			sl.ReportError(position.TakeProfitPrice, "TakeProfitPrice", "", "", "")
+		if takeProfitPrice < openPrice {
+			sl.ReportError(p.TakeProfitPrice, "TakeProfitPrice", "", "", "")
 		}
 	case "short":
-		if position.StopLossPrice < position.OpenPrice {
-			sl.ReportError(position.StopLossPrice, "StopLossPrice", "", "", "")
+		if stopLossPrice < openPrice {
+			sl.ReportError(p.StopLossPrice, "StopLossPrice", "", "", "")
 		}
 
-		if position.TakeProfitPrice > position.OpenPrice {
-			sl.ReportError(position.TakeProfitPrice, "TakeProfitPrice", "", "", "")
+		if takeProfitPrice > openPrice {
+			sl.ReportError(p.TakeProfitPrice, "TakeProfitPrice", "", "", "")
 		}
 	}
+}
+
+func strToFloat(s string) (float64, error) {
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return -1, err
+	}
+
+	return v, nil
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"
@@ -38,7 +39,7 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 		position.OpenPrice,
 		position.StopLossPrice,
 		position.TakeProfitPrice,
-		position.ClosePrice,
+		nullCheck(position.ClosePrice),
 		position.UserID).
 		Scan(&position.ID)
 	if err != nil {
@@ -46,6 +47,14 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 	}
 
 	return nil
+}
+
+func nullCheck(s string) *string {
+	if strings.TrimSpace(s) == "" {
+		return nil
+	}
+
+	return &s
 }
 
 func (pr *PositionRepo) FindAll(ctx context.Context, id string) ([]entity.Position, error) {

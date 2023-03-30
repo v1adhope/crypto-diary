@@ -29,8 +29,7 @@ func newPositionRoutes(r *positionRoutes) {
 		h.PUT("/", r.Replace)
 	}
 
-	r.validate.RegisterValidation("direction", validatePositionDirection)
-	r.validate.RegisterStructValidation(validatePosition, dto.Position{})
+	registerValidations(r.validate)
 }
 
 func (r *positionRoutes) GetAll(c *gin.Context) {
