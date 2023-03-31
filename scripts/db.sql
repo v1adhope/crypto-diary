@@ -10,7 +10,7 @@ CREATE TABLE positions (
   position_id int GENERATED ALWAYS AS IDENTITY,
   open_date date NOT NULL DEFAULT CURRENT_DATE,
   pair varchar(12) NOT NULL,
-  reason text NOT NULL,
+  reason text,
   strategically bool NOT NULL DEFAULT true,
   percentage_risk double precision NOT NULL,
   direction varchar(5) NOT NULL,

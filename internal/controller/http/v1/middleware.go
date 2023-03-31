@@ -98,7 +98,7 @@ func errorHandler() gin.HandlerFunc {
 				}
 
 				if errors.Is(err, entity.ErrTokenInvalid) || errors.Is(err, entity.ErrTokenInTheBlocklisk) {
-					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 						"error": entity.ErrTokenInvalid.Error(),
 					})
 					return

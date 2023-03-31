@@ -13,7 +13,7 @@ type PositionDTO struct {
 	ID              string
 	OpenDate        pgtype.Date
 	Pair            string
-	Reason          string
+	Reason          pgtype.Text
 	Strategically   bool
 	Risk            string
 	Direction       string
@@ -29,16 +29,14 @@ func (pd *PositionDTO) ToEntity() *entity.Position {
 	opendate := pd.OpenDate.Time.Format(_timeModel)
 	strategically := strconv.FormatBool(pd.Strategically)
 
-	var closePrice string
-	if pd.ClosePrice.Valid {
-		closePrice = pd.ClosePrice.String
-	}
+	reason := nullTextCheck(&pd.Reason)
+	closePrice := nullTextCheck(&pd.ClosePrice)
 
 	return &entity.Position{
 		ID:              pd.ID,
 		OpenDate:        opendate,
 		Pair:            pd.Pair,
-		Reason:          pd.Reason,
+		Reason:          reason,
 		Strategically:   strategically,
 		Risk:            pd.Risk,
 		Direction:       pd.Direction,
@@ -49,4 +47,12 @@ func (pd *PositionDTO) ToEntity() *entity.Position {
 		ClosePrice:      closePrice,
 		UserID:          pd.UserID,
 	}
+}
+
+func nullTextCheck(t *pgtype.Text) string {
+	if t.Valid {
+		return t.String
+	}
+
+	return ""
 }

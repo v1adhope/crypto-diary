@@ -8,7 +8,7 @@ logger:
   is_compress: false
 
 server:
-  socket: 0.0.0.0:8080
+  socket: 0.0.0.0:8081
   shutdown_timeout: 0s
   read_timeout: 15s
   write_timeout: 15s

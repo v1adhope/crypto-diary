@@ -31,7 +31,7 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 	err := pr.Pool.QueryRow(ctx, q,
 		position.OpenDate,
 		position.Pair,
-		position.Reason,
+		nullCheck(position.Reason),
 		position.Strategically,
 		position.Risk,
 		position.Direction,

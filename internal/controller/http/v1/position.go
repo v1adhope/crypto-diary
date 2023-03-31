@@ -79,7 +79,9 @@ func (r *positionRoutes) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, position.ID)
+	c.JSON(http.StatusCreated, gin.H{
+		"id": position.ID,
+	})
 }
 
 func (r *positionRoutes) Delete(c *gin.Context) {

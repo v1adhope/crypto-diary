@@ -4,7 +4,7 @@ type Position struct {
 	ID              string `json:"id"`
 	OpenDate        string `json:"openDate"`
 	Pair            string `json:"pair"`
-	Reason          string `json:"reason"`
+	Reason          string `json:"reason,omitempty"`
 	Strategically   string `json:"strategically"`
 	Risk            string `json:"risk"`
 	Direction       string `json:"direction"`
@@ -12,6 +12,6 @@ type Position struct {
 	OpenPrice       string `json:"openPrice"`
 	StopLossPrice   string `json:"stopLossPrice"`
 	TakeProfitPrice string `json:"takeProfitPrice"`
-	ClosePrice      string `json:"closePrice"`
+	ClosePrice      string `json:"closePrice,omitempty"`
 	UserID          string `json:"-"`
 }

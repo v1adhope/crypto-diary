@@ -8,7 +8,7 @@ type Position struct {
 	ID              string `json:"id,omitempty"`
 	OpenDate        string `json:"openDate" validate:"required,datetime=2006-01-02"`
 	Pair            string `json:"pair" validate:"required,max=12"`
-	Reason          string `json:"reason" validate:"required,max=300"`
+	Reason          string `json:"reason,omitempty" validate:"max=300"`
 	Strategically   string `json:"strategically" validate:"required,strategically"`
 	Risk            string `json:"risk" validate:"required,risk"`
 	Direction       string `json:"direction" validate:"required,direction"`
@@ -16,7 +16,7 @@ type Position struct {
 	OpenPrice       string `json:"openPrice" validate:"required"`
 	StopLossPrice   string `json:"stopLossPrice" validate:"required"`
 	TakeProfitPrice string `json:"takeProfitPrice" validate:"required"`
-	ClosePrice      string `json:"closePrice" validate:"closePrice"`
+	ClosePrice      string `json:"closePrice,omitempty" validate:"closePrice"`
 	UserID          string `json:"-" validate:"required"`
 }
 

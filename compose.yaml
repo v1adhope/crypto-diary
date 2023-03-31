@@ -6,7 +6,7 @@ services:
     volumes:
       - ./logs:/app/logs
     ports:
-      - 8080:8080
+      - 8081:8081
     depends_on:
       - storage
       - session
