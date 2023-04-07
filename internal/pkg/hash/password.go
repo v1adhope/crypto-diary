@@ -1,11 +1,12 @@
 package hash
 
 import (
-	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"strings"
 
 	"github.com/v1adhope/crypto-diary/internal/entity"
+	"golang.org/x/crypto/scrypt"
 )
 
 type PasswordHasher interface {
@@ -22,13 +23,12 @@ func New(salt string) *Hash {
 }
 
 func (h *Hash) GenerateHashedPassword(password string) (string, error) {
-	hash := sha256.New()
-
-	if _, err := hash.Write([]byte(password)); err != nil {
+	dk, err := scrypt.Key([]byte(password), []byte(h.salt), 1<<15, 8, 1, 32)
+	if err != nil {
 		return "", fmt.Errorf("hash: GenerateHashedPassword: Write: %w", err)
 	}
 
-	return fmt.Sprintf("%x", hash.Sum([]byte(h.salt))), nil
+	return base64.StdEncoding.EncodeToString(dk), nil
 }
 
 func (h *Hash) CompareHashAndPassword(hashedPassword, password string) error {
@@ -37,8 +37,8 @@ func (h *Hash) CompareHashAndPassword(hashedPassword, password string) error {
 		return fmt.Errorf("hash: CompareHashAndPassword: GenerateHashedPassword: %w", err)
 	}
 
-	res := strings.Compare(hashedPassword, hashedClientPassword)
-	if res != 0 {
+	match := strings.Compare(hashedPassword, hashedClientPassword)
+	if match != 0 {
 		return fmt.Errorf("hash: CompareHashAndPassword: Compare: %w", entity.ErrWrongPassword)
 	}
 
