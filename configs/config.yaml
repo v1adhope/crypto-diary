@@ -16,16 +16,16 @@ server:
 auth:
   issuer: crypto-diary.space
   refresh_token_lifetime: 168h
-  refresh_token_secret: TnFVnbXaqpgmZhpbNcWJunp2CZNkmRLtxxdzkijvoqMtk7LpS2xp7pWitTDRFkXtZXKS22Es
+  refresh_token_secret: 7PFUSSxFjeVkbxqAn5ktapVE2PvbQgTgzsrztktawFbYK2TubTkp4JvgjpHP3Taa
   access_token_lifetime: 15m
-  access_token_secret: fWoWCe9MfDihrPr4j7FH5dgy33kXdsRYVj9oWVHYQFynUWg9FSiRc3jMp9CtEJjXXYxAvrVb
+  access_token_secret: KycVkWHPDygdJFgerbHjr7v7erWF2NA7uxEkgTaeQLgqS2939XjmcVJUQfKEApkS
 
 session_storage:
   socket: session:6379
   password: ""
   database: 0
 
-password_secret: 47x7o3yFukFjWQ94Z9qFeQhVtXy7spzYZiFu5eLsU72uxUbSo35bu2j9tDTEcAZaAnWcnwZe
+password_secret: pWu2EnUd3yqyP9mfK7uaqWdNFjWTeKEvVxFCLcxE2hhJuwY9jKRb2ZwHztjC3LmL
 
 storage:
   username: designer

@@ -1,4 +1,3 @@
-// TODO: Optimization
 package auth
 
 import (
@@ -6,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/v1adhope/crypto-diary/internal/entity"
 )
@@ -25,10 +23,8 @@ const (
 	_kidAccessToken  = "access"
 )
 
-type TokenManager interface {
-	//Returning Refresh, Access tokens and error
-	GenerateTokenPair(id string) (string, string, error)
-
+type AuthManager interface {
+	GenerateTokenPair(id string) (refreshToken string, accessToken string, err error)
 	ValidateAccessToken(clientToken string) (string, error)
 	ValidateRefreshToken(clientToken string) (string, time.Duration, error)
 }
@@ -52,17 +48,12 @@ func New(cfg *Config) *Manager {
 }
 
 func (m *Manager) GenerateTokenPair(id string) (string, string, error) {
-	u, err := generateUUIDv4()
+	refreshToken, err := m.generateRefreshToken(id)
 	if err != nil {
 		return "", "", err
 	}
 
-	refreshToken, err := m.generateRefreshToken(id, u)
-	if err != nil {
-		return "", "", err
-	}
-
-	accessToken, err := m.generateAccessToken(id, u)
+	accessToken, err := m.generateAccessToken(id)
 	if err != nil {
 		return "", "", err
 	}
@@ -70,29 +61,12 @@ func (m *Manager) GenerateTokenPair(id string) (string, string, error) {
 	return refreshToken, accessToken, nil
 }
 
-func generateUUIDv4() (string, error) {
-	u4, err := uuid.NewV4()
-	if err != nil {
-		return "", fmt.Errorf("failed to generate UUID: %w", err)
-	}
-
-	return u4.String(), nil
-}
-
-// Tokens can change their fields, so there are duplications
-type refreshClaims struct {
-	jwt.RegisteredClaims
-}
-
-func (m *Manager) generateRefreshToken(id, uuidv string) (string, error) {
-	claims := refreshClaims{
-		jwt.RegisteredClaims{
-			ID:        uuidv,
-			Subject:   id,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshTokenLifetime)),
-			Issuer:    m.issuer,
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
+func (m *Manager) generateRefreshToken(id string) (string, error) {
+	claims := &jwt.RegisteredClaims{
+		Subject:   id,
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshTokenLifetime)),
+		Issuer:    m.issuer,
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -106,19 +80,12 @@ func (m *Manager) generateRefreshToken(id, uuidv string) (string, error) {
 	return signedToken, nil
 }
 
-type accessClaims struct {
-	jwt.RegisteredClaims
-}
-
-func (m *Manager) generateAccessToken(id, uuidv string) (string, error) {
-	claims := &accessClaims{
-		jwt.RegisteredClaims{
-			ID:        uuidv,
-			Subject:   id,
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTokenLifetime)),
-			Issuer:    m.issuer,
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
+func (m *Manager) generateAccessToken(id string) (string, error) {
+	claims := &jwt.RegisteredClaims{
+		Subject:   id,
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTokenLifetime)),
+		Issuer:    m.issuer,
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -154,7 +121,7 @@ func (m *Manager) ValidateRefreshToken(clientToken string) (string, time.Duratio
 		return "", 0, fmt.Errorf("%w: %s", entity.ErrTokenInvalid, err)
 	}
 
-	return id.(string), m.refreshTokenLifetime, nil
+	return id, m.refreshTokenLifetime, nil
 }
 
 func (m *Manager) ValidateAccessToken(clientToken string) (string, error) {
@@ -179,19 +146,18 @@ func (m *Manager) ValidateAccessToken(clientToken string) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s", id), nil
+	return id, nil
 }
 
-// May return nil use Sprintf or pointer varriable to claim
-func (m *Manager) extractClaimField(token *jwt.Token, key string) (interface{}, error) {
+func (m *Manager) extractClaimField(token *jwt.Token, key string) (string, error) {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		switch claim := claims[key].(type) {
 		default:
-			return claim, nil
+			return fmt.Sprintf("%v", claim), nil
 		case nil:
-			return nil, errors.New("claim is empty")
+			return "", errors.New("claim is empty")
 		}
 	}
 
-	return nil, errors.New("claims are empty")
+	return "", errors.New("claims are empty")
 }

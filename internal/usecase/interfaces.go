@@ -41,9 +41,7 @@ type (
 	}
 
 	AuthManager interface {
-		//Returning Refresh, Access tokens and error
-		GenerateTokenPair(id string) (string, string, error)
-
+		GenerateTokenPair(id string) (refreshToken string, accessToken string, err error)
 		ValidateAccessToken(clientToken string) (string, error)
 		ValidateRefreshToken(clientToken string) (string, time.Duration, error)
 	}
