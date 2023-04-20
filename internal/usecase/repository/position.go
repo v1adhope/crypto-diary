@@ -1,3 +1,4 @@
+// TODO
 package repository
 
 import (
@@ -5,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"
 )
@@ -57,13 +59,39 @@ func nullCheck(s string) *string {
 	return &s
 }
 
-func (pr *PositionRepo) FindAll(ctx context.Context, userID string, paginationCursor int) ([]entity.Position, error) {
+func (pr *PositionRepo) FindAll(ctx context.Context, userID string, paginationCursor int, filters entity.Filters) ([]entity.Position, error) {
 	q := `SELECT * FROM get_all_positions
-        WHERE user_id = $1 AND position_id > $2
-        ORDER by position_id ASC
-        LIMIT $3`
+	      WHERE user_id = $1 AND position_id > $2 %s`
 
-	rows, err := pr.Pool.Query(ctx, q, userID, paginationCursor, _defaultEntityCap)
+	q, args := BuildFilterString(filterDeps{
+		Query:                 q,
+		QueryPlaceholderCount: 2,
+		PaginationCursor:      paginationCursor,
+		Filters:               filters,
+		AllowedFilters:        entity.AllowedFilters,
+	})
+
+	var (
+		rows pgx.Rows
+		err  error
+	)
+
+	const ( // Count of args in query
+		one = iota
+		two
+		three
+	)
+
+	switch len(args) - 1 {
+	default:
+		rows, err = pr.Pool.Query(ctx, q, userID, paginationCursor, _defaultEntityCap)
+	case one:
+		rows, err = pr.Pool.Query(ctx, q, userID, paginationCursor, args[one], _defaultEntityCap)
+	case two:
+		rows, err = pr.Pool.Query(ctx, q, userID, paginationCursor, args[one], args[two], _defaultEntityCap)
+	case three:
+		rows, err = pr.Pool.Query(ctx, q, userID, paginationCursor, args[one], args[two], args[three], _defaultEntityCap)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("repository: FindAll position: Query: %s", err)
 	}

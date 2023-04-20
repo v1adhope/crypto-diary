@@ -40,7 +40,9 @@ func (r *positionRoutes) GetAll(c *gin.Context) {
 
 	paginationCursor := getPaginationCursor(c)
 
-	positions, err := r.useCase.GetAll(c.Request.Context(), userID, paginationCursor)
+	filters := getValidMapFilters(c)
+
+	positions, err := r.useCase.GetAll(c.Request.Context(), userID, paginationCursor, filters)
 	if err != nil {
 		r.logger.Debug(err, "http/v1: GetAll position: GetAll")
 		c.Error(err)

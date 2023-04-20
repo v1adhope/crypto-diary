@@ -9,7 +9,7 @@ verify:
 	go mod verify
 
 build: mod verify
-	go build -o .bin/main -race ./cmd/app
+	go build -o .bin/app -race ./cmd/app
 
 stop:
 	docker compose down -v

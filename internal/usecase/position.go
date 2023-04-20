@@ -17,8 +17,8 @@ func NewPositionUseCase(repo PositionRepo) *PositionUsecase {
 	}
 }
 
-func (uc *PositionUsecase) GetAll(ctx context.Context, userID string, paginationCursor int) ([]entity.Position, error) {
-	positions, err := uc.repo.FindAll(ctx, userID, paginationCursor)
+func (uc *PositionUsecase) GetAll(ctx context.Context, userID string, paginationCursor int, filters entity.Filters) ([]entity.Position, error) {
+	positions, err := uc.repo.FindAll(ctx, userID, paginationCursor, filters)
 	if err != nil {
 		return nil, fmt.Errorf("usecase: GetAll position: FindAll: %w", err)
 	}
