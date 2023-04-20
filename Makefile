@@ -1,7 +1,6 @@
 .SILENT:
 
-build: mod verify
-	go build -o .bin/main -race ./cmd/app
+default: build
 
 mod:
 	go mod tidy -v
@@ -9,14 +8,17 @@ mod:
 verify:
 	go mod verify
 
-run: stop build
-	docker compose  up --build
+build: mod verify
+	go build -o .bin/main -race ./cmd/app
 
 stop:
-	docker compose  down -v
+	docker compose down -v
 
-.PHONY: cover
-cover:
-	go test -short -count=1 -race -coverprofile=cover.out ./...
-	go tool cover -html=cover.out
-	rm cover.out
+run: stop build
+	docker compose up --build
+
+# .PHONY: cover
+# cover:
+# 	go test -short -count=1 -race -coverprofile=cover.out ./...
+# 	go tool cover -html=cover.out
+# 	rm cover.out

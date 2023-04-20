@@ -3,6 +3,7 @@ package v1
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -10,7 +11,8 @@ import (
 )
 
 const (
-	_userCtxKey = "userID"
+	_userCtxKey               = "userID"
+	_paginationCursorQueryKey = "cursor"
 )
 
 type authMiddleware interface {
@@ -124,4 +126,13 @@ func errorHandler() gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}
 	}
+}
+
+func getPaginationCursor(c *gin.Context) int {
+	pc, err := strconv.Atoi(c.Query(_paginationCursorQueryKey))
+	if err != nil {
+		return 0
+	}
+
+	return pc
 }

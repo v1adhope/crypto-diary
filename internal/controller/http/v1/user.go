@@ -20,10 +20,10 @@ type userRoutes struct {
 func newUserRoutes(r *userRoutes) {
 	h := r.h.Group("/auth")
 	{
-		h.POST("/signup", r.signUp)
-		h.POST("/signin", r.signIn)
-		h.POST("/refresh", r.refreshTokens)
-		h.POST("/signout", r.signOut)
+		h.POST("/signup/", r.signUp)
+		h.POST("/signin/", r.signIn)
+		h.POST("/refresh/", r.refreshTokens)
+		h.POST("/signout/", r.signOut)
 	}
 }
 

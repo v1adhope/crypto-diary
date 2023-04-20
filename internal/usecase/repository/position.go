@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	defaultEntityCap = 25
+	_defaultEntityCap = 25
 )
 
 type PositionRepo struct {
@@ -57,18 +57,19 @@ func nullCheck(s string) *string {
 	return &s
 }
 
-func (pr *PositionRepo) FindAll(ctx context.Context, id string) ([]entity.Position, error) {
+func (pr *PositionRepo) FindAll(ctx context.Context, userID string, paginationCursor int) ([]entity.Position, error) {
 	q := `SELECT * FROM get_all_positions
-        WHERE user_id = $1
-        ORDER by position_id ASC`
+        WHERE user_id = $1 AND position_id > $2
+        ORDER by position_id ASC
+        LIMIT $3`
 
-	rows, err := pr.Pool.Query(ctx, q, id)
+	rows, err := pr.Pool.Query(ctx, q, userID, paginationCursor, _defaultEntityCap)
 	if err != nil {
 		return nil, fmt.Errorf("repository: FindAll position: Query: %s", err)
 	}
 	defer rows.Close()
 
-	positions := make([]entity.Position, 0, defaultEntityCap)
+	positions := make([]entity.Position, 0, _defaultEntityCap)
 
 	for rows.Next() {
 		p := &PositionDTO{}

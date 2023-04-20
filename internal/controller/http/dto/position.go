@@ -1,3 +1,4 @@
+// TODO: Generic?
 package dto
 
 import (
@@ -5,7 +6,6 @@ import (
 )
 
 type Position struct {
-	ID              string `json:"id,omitempty"`
 	OpenDate        string `json:"openDate" validate:"required,datetime=2006-01-02"`
 	Pair            string `json:"pair" validate:"required,max=12"`
 	Reason          string `json:"reason,omitempty" validate:"max=300"`
@@ -21,6 +21,28 @@ type Position struct {
 }
 
 func (p *Position) ToEntity() *entity.Position {
+	return &entity.Position{
+		OpenDate:        p.OpenDate,
+		Pair:            p.Pair,
+		Reason:          p.Reason,
+		Strategically:   p.Strategically,
+		Risk:            p.Risk,
+		Direction:       p.Direction,
+		Deposit:         p.Deposit,
+		OpenPrice:       p.OpenPrice,
+		StopLossPrice:   p.StopLossPrice,
+		TakeProfitPrice: p.TakeProfitPrice,
+		ClosePrice:      p.ClosePrice,
+		UserID:          p.UserID,
+	}
+}
+
+type PositionUpdate struct {
+	ID string `json:"id" validate:"required"`
+	*Position
+}
+
+func (p *PositionUpdate) ToEntity() *entity.Position {
 	return &entity.Position{
 		ID:              p.ID,
 		OpenDate:        p.OpenDate,

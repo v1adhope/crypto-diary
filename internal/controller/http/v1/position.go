@@ -38,7 +38,9 @@ func (r *positionRoutes) GetAll(c *gin.Context) {
 		return
 	}
 
-	positions, err := r.useCase.GetAll(c.Request.Context(), userID)
+	paginationCursor := getPaginationCursor(c)
+
+	positions, err := r.useCase.GetAll(c.Request.Context(), userID, paginationCursor)
 	if err != nil {
 		r.logger.Debug(err, "http/v1: GetAll position: GetAll")
 		c.Error(err)
@@ -113,8 +115,8 @@ func (r *positionRoutes) Replace(c *gin.Context) {
 		return
 	}
 
-	positionDTO := &dto.Position{
-		UserID: userID,
+	positionDTO := &dto.PositionUpdate{
+		Position: &dto.Position{UserID: userID},
 	}
 
 	if err := c.ShouldBindJSON(positionDTO); err != nil {

@@ -17,7 +17,7 @@ type (
 	}
 
 	Position interface {
-		GetAll(ctx context.Context, id string) ([]entity.Position, error)
+		GetAll(ctx context.Context, userID string, paginationCursor int) ([]entity.Position, error)
 		Create(ctx context.Context, position *entity.Position) error
 		Replace(ctx context.Context, position *entity.Position) error
 		Delete(ctx context.Context, userID, positionID string) error
@@ -29,10 +29,10 @@ type (
 	}
 
 	PositionRepo interface {
+		FindAll(ctx context.Context, userID string, paginationCursor int) ([]entity.Position, error)
 		Create(ctx context.Context, position *entity.Position) error
-		FindAll(ctx context.Context, id string) ([]entity.Position, error)
-		Delete(ctx context.Context, userID, positionID string) error
 		Replace(ctx context.Context, position *entity.Position) error
+		Delete(ctx context.Context, userID, positionID string) error
 	}
 
 	PasswordHasher interface {
