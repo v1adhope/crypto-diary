@@ -1,4 +1,3 @@
-// TODO
 package repository
 
 import (
@@ -61,12 +60,11 @@ func nullCheck(s string) *string {
 
 func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entity.Filter) ([]entity.Position, error) {
 	q := `SELECT * FROM get_all_positions
-	      WHERE user_id = $1 AND position_id > $2 %s`
+	      WHERE user_id = $1 AND position_id > $2`
 
 	q, args := BuildFilterString(filterBuilderDeps{
-		Query:                 q,
-		QueryPlaceholderCount: 2,
-		Filter:                filter,
+		Query:  q,
+		Filter: filter,
 	})
 
 	var (

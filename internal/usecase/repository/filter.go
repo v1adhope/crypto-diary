@@ -15,9 +15,8 @@ var allowedFilters = map[string]string{
 }
 
 type filterBuilderDeps struct {
-	Query                 string
-	QueryPlaceholderCount int
-	Filter                entity.Filter
+	Query  string
+	Filter entity.Filter
 }
 
 func BuildFilterString(deps filterBuilderDeps) (string, []string) {
@@ -26,7 +25,11 @@ func BuildFilterString(deps filterBuilderDeps) (string, []string) {
 		mu        sync.RWMutex
 	)
 
-	args, argsCounter := make([]string, 0), deps.QueryPlaceholderCount+1
+	fmt.Fprint(&filterRaw, deps.Query, " ")
+
+	argsCounter := strings.Count(deps.Query, "$") + 1
+
+	args := make([]string, 0)
 
 	for fieldKey, fieldVal := range deps.Filter.Fields {
 		mu.RLock()
@@ -40,5 +43,5 @@ func BuildFilterString(deps filterBuilderDeps) (string, []string) {
 
 	fmt.Fprintf(&filterRaw, "ORDER by position_id ASC LIMIT $%d", argsCounter)
 
-	return fmt.Sprintf(deps.Query, filterRaw.String()), args
+	return filterRaw.String(), args
 }
