@@ -1,6 +1,16 @@
 package v1
 
-import "github.com/gin-gonic/gin"
+import (
+	"errors"
+
+	"github.com/gin-gonic/gin"
+)
+
+var (
+	NotValidDate          = errors.New("not valid date")
+	NotValidPair          = errors.New("not valid pair")
+	NotValidStrategically = errors.New("not valid strategically")
+)
 
 func catchErrorBind(c *gin.Context, err error) {
 	c.Error(err).SetType(gin.ErrorTypeBind)

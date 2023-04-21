@@ -1,8 +1,6 @@
-// TODO
 package v1
 
 import (
-	"errors"
 	"strconv"
 	"time"
 
@@ -23,20 +21,20 @@ func getPaginationCursor(c *gin.Context) int {
 	return pc
 }
 
-func getValidMapFilters(c *gin.Context) entity.Filters {
-	queryValByQueryKey := entity.Filters{}
+func getValidMapFields(c *gin.Context) map[string]string {
+	queryValByQueryKey := make(map[string]string)
 
-	queryVal, err := getAndvalidateDate(c.Query(entity.FilterDate))
+	queryVal, err := getAndValidateDate(c.Query(entity.FilterDate))
 	if err == nil {
 		queryValByQueryKey[entity.FilterDate] = queryVal
 	}
 
-	queryVal, err = getAndvalidatePair(c.Query(entity.FilterPair))
+	queryVal, err = getAndValidatePair(c.Query(entity.FilterPair))
 	if err == nil {
 		queryValByQueryKey[entity.FilterPair] = queryVal
 	}
 
-	queryVal, err = getAndvalidateStrategically(c.Query(entity.FilterStrategically))
+	queryVal, err = getAndValidateStrategically(c.Query(entity.FilterStrategically))
 	if err == nil {
 		queryValByQueryKey[entity.FilterStrategically] = queryVal
 	}
@@ -44,27 +42,28 @@ func getValidMapFilters(c *gin.Context) entity.Filters {
 	return queryValByQueryKey
 }
 
-func getAndvalidateDate(target string) (string, error) {
+// INFO: Shadow errors, used for debug
+func getAndValidateDate(target string) (string, error) {
 	_, err := time.Parse(time.DateOnly, target)
 	if err != nil {
-		return "", errors.New("not valid date")
+		return "", NotValidDate
 	}
 
 	return target, nil
 }
 
-func getAndvalidatePair(target string) (string, error) {
+func getAndValidatePair(target string) (string, error) {
 	if tl := len(target); tl > 12 || tl == 0 {
-		return "", errors.New("not valid pair")
+		return "", NotValidPair
 	}
 
 	return target, nil
 }
 
-func getAndvalidateStrategically(target string) (string, error) {
+func getAndValidateStrategically(target string) (string, error) {
 	_, err := strconv.ParseBool(target)
 	if err != nil {
-		return "", errors.New("not valid strategically")
+		return "", NotValidStrategically
 	}
 
 	return target, nil

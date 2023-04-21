@@ -17,7 +17,7 @@ type (
 	}
 
 	Position interface {
-		GetAll(ctx context.Context, userID string, paginationCursor int, filters entity.Filters) ([]entity.Position, error)
+		GetAll(ctx context.Context, userID string, filter entity.Filter) ([]entity.Position, error)
 		Create(ctx context.Context, position *entity.Position) error
 		Replace(ctx context.Context, position *entity.Position) error
 		Delete(ctx context.Context, userID, positionID string) error
@@ -29,7 +29,7 @@ type (
 	}
 
 	PositionRepo interface {
-		FindAll(ctx context.Context, userID string, paginationCursor int, filters entity.Filters) ([]entity.Position, error)
+		FindAll(ctx context.Context, userID string, filter entity.Filter) ([]entity.Position, error)
 		Create(ctx context.Context, position *entity.Position) error
 		Replace(ctx context.Context, position *entity.Position) error
 		Delete(ctx context.Context, userID, positionID string) error

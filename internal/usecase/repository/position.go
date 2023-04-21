@@ -59,16 +59,14 @@ func nullCheck(s string) *string {
 	return &s
 }
 
-func (pr *PositionRepo) FindAll(ctx context.Context, userID string, paginationCursor int, filters entity.Filters) ([]entity.Position, error) {
+func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entity.Filter) ([]entity.Position, error) {
 	q := `SELECT * FROM get_all_positions
 	      WHERE user_id = $1 AND position_id > $2 %s`
 
-	q, args := BuildFilterString(filterDeps{
+	q, args := BuildFilterString(filterBuilderDeps{
 		Query:                 q,
 		QueryPlaceholderCount: 2,
-		PaginationCursor:      paginationCursor,
-		Filters:               filters,
-		AllowedFilters:        entity.AllowedFilters,
+		Filter:                filter,
 	})
 
 	var (
@@ -84,13 +82,17 @@ func (pr *PositionRepo) FindAll(ctx context.Context, userID string, paginationCu
 
 	switch len(args) - 1 {
 	default:
-		rows, err = pr.Pool.Query(ctx, q, userID, paginationCursor, _defaultEntityCap)
+		rows, err = pr.Pool.Query(ctx, q, userID, filter.PaginationCursor,
+			_defaultEntityCap)
 	case one:
-		rows, err = pr.Pool.Query(ctx, q, userID, paginationCursor, args[one], _defaultEntityCap)
+		rows, err = pr.Pool.Query(ctx, q, userID, filter.PaginationCursor,
+			args[one], _defaultEntityCap)
 	case two:
-		rows, err = pr.Pool.Query(ctx, q, userID, paginationCursor, args[one], args[two], _defaultEntityCap)
+		rows, err = pr.Pool.Query(ctx, q, userID, filter.PaginationCursor,
+			args[one], args[two], _defaultEntityCap)
 	case three:
-		rows, err = pr.Pool.Query(ctx, q, userID, paginationCursor, args[one], args[two], args[three], _defaultEntityCap)
+		rows, err = pr.Pool.Query(ctx, q, userID, filter.PaginationCursor,
+			args[one], args[two], args[three], _defaultEntityCap)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("repository: FindAll position: Query: %s", err)

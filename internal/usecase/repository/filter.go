@@ -1,4 +1,3 @@
-// TODO: Params struct, names, clean
 package repository
 
 import (
@@ -8,25 +7,27 @@ import (
 	"github.com/v1adhope/crypto-diary/internal/entity"
 )
 
-type filterDeps struct {
-	Query                 string
-	QueryPlaceholderCount int
-	PaginationCursor      int
-	Filters               entity.Filters
-	AllowedFilters        entity.Filters
+var allowedFilters = map[string]string{
+	entity.FilterDate:          "open_date",
+	entity.FilterPair:          "pair",
+	entity.FilterStrategically: "strategically",
 }
 
-func BuildFilterString(deps filterDeps) (string, []string) {
-	var (
-		filterRaw strings.Builder
-	)
+type filterBuilderDeps struct {
+	Query                 string
+	QueryPlaceholderCount int
+	Filter                entity.Filter
+}
+
+func BuildFilterString(deps filterBuilderDeps) (string, []string) {
+	var filterRaw strings.Builder
 
 	args, argsCounter := make([]string, 0), deps.QueryPlaceholderCount+1
 
-	for k, v := range deps.Filters {
-		if realFilterName, ok := deps.AllowedFilters[k]; ok {
+	for fieldKey, fieldVal := range deps.Filter.Fields {
+		if realFilterName, ok := allowedFilters[fieldKey]; ok {
 			fmt.Fprintf(&filterRaw, "AND %s = $%d ", realFilterName, argsCounter)
-			args = append(args, v)
+			args = append(args, fieldVal)
 			argsCounter++
 		}
 	}

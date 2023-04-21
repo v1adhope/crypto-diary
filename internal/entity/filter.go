@@ -1,16 +1,12 @@
-// TODO: Best place?
 package entity
 
-type Filters map[string]string
+type Filter struct {
+	PaginationCursor int
+	Fields           map[string]string
+}
 
-var (
+const (
 	FilterDate          = "date"
 	FilterPair          = "pair"
 	FilterStrategically = "strategically"
-
-	AllowedFilters = map[string]string{
-		FilterDate:          "open_date",
-		FilterPair:          "pair",
-		FilterStrategically: "strategically",
-	}
 )

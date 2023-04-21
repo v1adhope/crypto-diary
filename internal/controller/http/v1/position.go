@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/v1adhope/crypto-diary/internal/controller/http/dto"
+	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/internal/usecase"
 	"github.com/v1adhope/crypto-diary/pkg/logger"
 )
@@ -38,11 +39,12 @@ func (r *positionRoutes) GetAll(c *gin.Context) {
 		return
 	}
 
-	paginationCursor := getPaginationCursor(c)
+	filter := entity.Filter{
+		PaginationCursor: getPaginationCursor(c),
+		Fields:           getValidMapFields(c),
+	}
 
-	filters := getValidMapFilters(c)
-
-	positions, err := r.useCase.GetAll(c.Request.Context(), userID, paginationCursor, filters)
+	positions, err := r.useCase.GetAll(c.Request.Context(), userID, filter)
 	if err != nil {
 		r.logger.Debug(err, "http/v1: GetAll position: GetAll")
 		c.Error(err)
