@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/v1adhope/crypto-diary/internal/entity"
 )
@@ -20,16 +21,21 @@ type filterBuilderDeps struct {
 }
 
 func BuildFilterString(deps filterBuilderDeps) (string, []string) {
-	var filterRaw strings.Builder
+	var (
+		filterRaw strings.Builder
+		mu        sync.RWMutex
+	)
 
 	args, argsCounter := make([]string, 0), deps.QueryPlaceholderCount+1
 
 	for fieldKey, fieldVal := range deps.Filter.Fields {
+		mu.RLock()
 		if realFilterName, ok := allowedFilters[fieldKey]; ok {
 			fmt.Fprintf(&filterRaw, "AND %s = $%d ", realFilterName, argsCounter)
 			args = append(args, fieldVal)
 			argsCounter++
 		}
+		mu.RUnlock()
 	}
 
 	fmt.Fprintf(&filterRaw, "ORDER by position_id ASC LIMIT $%d", argsCounter)
