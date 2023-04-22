@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -20,13 +21,16 @@ type Config struct {
 }
 
 type Postgres struct {
-	Pool *pgxpool.Pool
+	Pool    *pgxpool.Pool
+	Builder squirrel.StatementBuilderType
 }
 
 func NewClient(ctx context.Context, cfg *Config) (*Postgres, error) {
 	pg := &Postgres{}
 
 	dsn := fmt.Sprintf("postgresql://%s:%s@%s/%s", cfg.Username, cfg.Password, cfg.Socket, cfg.Database)
+
+	pg.Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 	poolCfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {

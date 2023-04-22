@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/v1adhope/crypto-diary/internal/entity"
 	"github.com/v1adhope/crypto-diary/pkg/postgres"
 )
@@ -23,26 +22,38 @@ func NewPosition(pg *postgres.Postgres) *PositionRepo {
 }
 
 func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) error {
-	q := `INSERT INTO positions(open_date, pair, reason, strategically, percentage_risk,
-                             direction, deposit, open_price, stop_loss_price,
-                             take_profit_price, close_price, user_id)
-        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-        RETURNING position_id`
+	sql, args, err := pr.Builder.Insert("positions").
+		Columns("open_date",
+			"pair",
+			"reason",
+			"strategically",
+			"percentage_risk",
+			"direction",
+			"deposit",
+			"open_price",
+			"stop_loss_price",
+			"take_profit_price",
+			"close_price",
+			"user_id").
+		Values(position.OpenDate,
+			position.Pair,
+			nullCheck(position.Reason),
+			position.Strategically,
+			position.Risk,
+			position.Direction,
+			position.Deposit,
+			position.OpenPrice,
+			position.StopLossPrice,
+			position.TakeProfitPrice,
+			nullCheck(position.ClosePrice),
+			position.UserID).
+		Suffix("RETURNING position_id").
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("repository: Create position: Query builder: %s", err)
+	}
 
-	err := pr.Pool.QueryRow(ctx, q,
-		position.OpenDate,
-		position.Pair,
-		nullCheck(position.Reason),
-		position.Strategically,
-		position.Risk,
-		position.Direction,
-		position.Deposit,
-		position.OpenPrice,
-		position.StopLossPrice,
-		position.TakeProfitPrice,
-		nullCheck(position.ClosePrice),
-		position.UserID).
-		Scan(&position.ID)
+	err = pr.Pool.QueryRow(ctx, sql, args...).Scan(&position.ID)
 	if err != nil {
 		return fmt.Errorf("repository: Create position: QueryRow: %s", err)
 	}
@@ -59,39 +70,25 @@ func nullCheck(s string) *string {
 }
 
 func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entity.Filter) ([]entity.Position, error) {
-	q := `SELECT * FROM get_all_positions
-	      WHERE user_id = $1 AND position_id > $2`
 
-	q, args := BuildFilterString(filterBuilderDeps{
-		Query:  q,
-		Filter: filter,
-	})
+	q := pr.Builder.Select("*").
+		From("get_all_positions").
+		Where("user_id = ? AND position_id > ?", userID, filter.PaginationCursor)
 
-	var (
-		rows pgx.Rows
-		err  error
-	)
-
-	const ( // Count of args in query
-		one = iota
-		two
-		three
-	)
-
-	switch len(args) - 1 {
-	default:
-		rows, err = pr.Pool.Query(ctx, q, userID, filter.PaginationCursor,
-			_defaultEntityCap)
-	case one:
-		rows, err = pr.Pool.Query(ctx, q, userID, filter.PaginationCursor,
-			args[one], _defaultEntityCap)
-	case two:
-		rows, err = pr.Pool.Query(ctx, q, userID, filter.PaginationCursor,
-			args[one], args[two], _defaultEntityCap)
-	case three:
-		rows, err = pr.Pool.Query(ctx, q, userID, filter.PaginationCursor,
-			args[one], args[two], args[three], _defaultEntityCap)
+	for fieldKey, fieldVal := range filter.Fields {
+		if realFilterName, ok := allowedFilters.Load(fieldKey); ok {
+			q = q.Where(fmt.Sprintf("%s = ?", realFilterName.(string)), fieldVal)
+		}
 	}
+
+	sql, args, err := q.OrderBy("position_id ASC").
+		Limit(_defaultEntityCap).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("repository: FindAll position: Query builder: %s", err)
+	}
+
+	rows, err := pr.Pool.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("repository: FindAll position: Query: %s", err)
 	}
@@ -127,10 +124,14 @@ func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entit
 }
 
 func (pr *PositionRepo) Delete(ctx context.Context, userID, positionID string) error {
-	q := `DELETE FROM positions
-        WHERE user_id = $1 AND position_id = $2`
+	sql, args, err := pr.Builder.Delete("positions").
+		Where("user_id = ? AND position_id = ?", userID, positionID).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("repository: Delete position: Query builder: %s", err)
+	}
 
-	commandTag, err := pr.Pool.Exec(ctx, q, userID, positionID)
+	commandTag, err := pr.Pool.Exec(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("repository: Delete positon: Exec: %s", err)
 	}
@@ -143,28 +144,25 @@ func (pr *PositionRepo) Delete(ctx context.Context, userID, positionID string) e
 }
 
 func (pr *PositionRepo) Replace(ctx context.Context, position *entity.Position) error {
-	q := `UPDATE positions
-        SET open_date = $1, pair = $2, reason = $3, strategically = $4,
-          percentage_risk = $5, direction = $6, deposit = $7, open_price = $8,
-          stop_loss_price=$9, take_profit_price=$10, close_price=$11
-        WHERE position_id = $12 AND user_id = $13`
+	sql, args, err := pr.Builder.Update("positions").
+		Set("open_date", position.OpenDate).
+		Set("pair", position.Pair).
+		Set("reason", position.Reason).
+		Set("strategically", position.Strategically).
+		Set("percentage_risk", position.Risk).
+		Set("direction", position.Direction).
+		Set("deposit", position.Deposit).
+		Set("open_price", position.OpenPrice).
+		Set("stop_loss_price", position.StopLossPrice).
+		Set("take_profit_price", position.TakeProfitPrice).
+		Set("close_price", position.ClosePrice).
+		Where("user_id = ? AND position_id = ?", position.UserID, position.ID).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("repository: Replace position: Query builder: %s", err)
+	}
 
-	commandTag, err := pr.Pool.Exec(ctx, q,
-		position.OpenDate,
-		position.Pair,
-		position.Reason,
-		position.Strategically,
-		position.Risk,
-		position.Direction,
-		position.Deposit,
-		position.OpenPrice,
-		position.StopLossPrice,
-		position.TakeProfitPrice,
-		position.ClosePrice,
-
-		position.ID,
-		position.UserID,
-	)
+	commandTag, err := pr.Pool.Exec(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("repository: Replace position: Exec: %w", err)
 	}

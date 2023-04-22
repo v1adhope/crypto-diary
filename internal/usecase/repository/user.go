@@ -21,10 +21,15 @@ func NewUser(pg *postgres.Postgres) *UserRepo {
 }
 
 func (ur *UserRepo) Create(ctx context.Context, user entity.User) error {
-	q := `INSERT INTO users(email, password)
-        VALUES($1,$2)`
+	sql, args, err := ur.Builder.Insert("users").
+		Columns("email", "password").
+		Values(user.Email, user.Password).
+		ToSql()
+	if err != nil {
+		return fmt.Errorf("repository: Create user: Query builder: %s", err)
+	}
 
-	_, err := ur.Pool.Exec(ctx, q, user.Email, user.Password)
+	_, err = ur.Pool.Exec(ctx, sql, args...)
 	if err != nil {
 		var pgErr *pgconn.PgError
 
@@ -43,13 +48,17 @@ func (ur *UserRepo) Create(ctx context.Context, user entity.User) error {
 }
 
 func (ur *UserRepo) Get(ctx context.Context, email string) (*entity.User, error) {
-	q := `SELECT *
-        FROM get_user 
-        WHERE email = $1`
+	sql, args, err := ur.Builder.Select("*").
+		From("get_user").
+		Where("email = ?", email).
+		ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("repository: Create user: Query builder: %s", err)
+	}
 
 	u := &entity.User{}
 
-	err := ur.Pool.QueryRow(ctx, q, email).Scan(&u.ID, &u.Email, &u.Password)
+	err = ur.Pool.QueryRow(ctx, sql, args...).Scan(&u.ID, &u.Email, &u.Password)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, entity.ErrUserNotExists

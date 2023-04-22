@@ -2,13 +2,9 @@
 
 default: build
 
-mod:
+build:
 	go mod tidy -v
-
-verify:
 	go mod verify
-
-build: mod verify
 	go build -o .bin/app -race ./cmd/app
 
 stop:
