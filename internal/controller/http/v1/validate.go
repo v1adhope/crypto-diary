@@ -1,9 +1,9 @@
-// TODO: Generic?
 package v1
 
 import (
 	"strconv"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/v1adhope/crypto-diary/internal/controller/http/dto"
 )
@@ -67,6 +67,7 @@ func validatePositionClosePrice(fls validator.FieldLevel) bool {
 	return false
 }
 
+// TODO: Dirty
 func validatePosition(sl validator.StructLevel) {
 	p := sl.Current().Interface().(dto.Position)
 
@@ -112,4 +113,13 @@ func strToFloat(s string) (float64, error) {
 	}
 
 	return v, nil
+}
+
+func validatePositionID(c *gin.Context, id string) (bool, error) {
+	_, err := strconv.Atoi(id)
+	if err == nil {
+		return true, nil
+	}
+
+	return false, NotValidPositionID
 }

@@ -14,5 +14,7 @@ var (
 	//INFO: Private
 	ErrWrongPassword       = errors.New("passwords do not match")
 	ErrTokenInTheBlocklisk = errors.New("token in the blocklist")
-	ErrTokenInvalid        = errors.New("invalid token")
+
+	//INFO: Public
+	ErrTokenInvalid = errors.New("invalid token")
 )

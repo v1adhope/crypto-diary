@@ -105,6 +105,13 @@ func errorHandler() gin.HandlerFunc {
 				}
 
 				//INFO: Positon
+				if errors.Is(err, NotValidPositionID) {
+					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+						"error": NotValidPositionID.Error(),
+					})
+					return
+				}
+
 				if errors.Is(err, entity.ErrNoFoundPosition) {
 					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 						"error": entity.ErrNoFoundPosition.Error(),

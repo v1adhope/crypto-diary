@@ -59,7 +59,3 @@ func (p *PositionUpdate) ToEntity() *entity.Position {
 		UserID:          p.UserID,
 	}
 }
-
-type PositionDelete struct {
-	ID string `json:"id"`
-}

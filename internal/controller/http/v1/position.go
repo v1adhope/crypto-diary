@@ -11,6 +11,10 @@ import (
 	"github.com/v1adhope/crypto-diary/pkg/logger"
 )
 
+const (
+	_positionIDQueryKey = "id"
+)
+
 type positionRoutes struct {
 	h        *gin.RouterGroup
 	m        authMiddleware
@@ -96,15 +100,15 @@ func (r *positionRoutes) Delete(c *gin.Context) {
 		return
 	}
 
-	positionDTO := &dto.PositionDelete{}
+	positionID := c.Query(_positionIDQueryKey)
 
-	if err := c.ShouldBindJSON(positionDTO); err != nil {
-		r.logger.Debug(err, "http/v1: Delete position: ShouldBindJSON")
-		catchErrorBind(c, err)
+	if ok, err := validatePositionID(c, positionID); !ok {
+		r.logger.Debug(err, "http/v1: Delete position: validatePositionID")
+		c.Error(err)
 		return
 	}
 
-	if err := r.useCase.Delete(c.Request.Context(), userID, positionDTO.ID); err != nil {
+	if err := r.useCase.Delete(c.Request.Context(), userID, positionID); err != nil {
 		r.logger.Debug(err, "http/v1: Delete position: Delete")
 		c.Error(err)
 		return
