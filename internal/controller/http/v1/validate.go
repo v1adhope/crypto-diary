@@ -3,7 +3,6 @@ package v1
 import (
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/v1adhope/crypto-diary/internal/controller/http/dto"
 )
@@ -14,6 +13,7 @@ func registerValidations(v *validator.Validate) {
 	v.RegisterValidation("risk", validatePositionRisk)
 	v.RegisterValidation("deposit", validatePositionDeposit)
 	v.RegisterValidation("closePrice", validatePositionClosePrice)
+	v.RegisterValidation("positionID", validatePositionID)
 	v.RegisterStructValidation(validatePosition, dto.Position{})
 }
 
@@ -26,8 +26,8 @@ func validatePositionDirection(fl validator.FieldLevel) bool {
 	return false
 }
 
-func validatePositionStrategically(fls validator.FieldLevel) bool {
-	_, err := strconv.ParseBool(fls.Field().String())
+func validatePositionStrategically(fl validator.FieldLevel) bool {
+	_, err := strconv.ParseBool(fl.Field().String())
 	if err == nil {
 		return true
 	}
@@ -35,8 +35,8 @@ func validatePositionStrategically(fls validator.FieldLevel) bool {
 	return false
 }
 
-func validatePositionRisk(fls validator.FieldLevel) bool {
-	risk, err := strToFloat(fls.Field().String())
+func validatePositionRisk(fl validator.FieldLevel) bool {
+	risk, err := strToFloat(fl.Field().String())
 	if err == nil && risk > 0 && risk <= 100 {
 		return true
 	}
@@ -44,8 +44,8 @@ func validatePositionRisk(fls validator.FieldLevel) bool {
 	return false
 }
 
-func validatePositionDeposit(fls validator.FieldLevel) bool {
-	deposit, err := strToFloat(fls.Field().String())
+func validatePositionDeposit(fl validator.FieldLevel) bool {
+	deposit, err := strToFloat(fl.Field().String())
 	if err == nil && deposit > 0 {
 		return true
 	}
@@ -53,14 +53,23 @@ func validatePositionDeposit(fls validator.FieldLevel) bool {
 	return false
 }
 
-func validatePositionClosePrice(fls validator.FieldLevel) bool {
-	tmp := fls.Field().String()
+func validatePositionClosePrice(fl validator.FieldLevel) bool {
+	tmp := fl.Field().String()
 	if tmp == "" {
 		return true
 	}
 
 	closePrice, err := strToFloat(tmp)
 	if err == nil && closePrice >= 0 {
+		return true
+	}
+
+	return false
+}
+
+func validatePositionID(fl validator.FieldLevel) bool {
+	_, err := strToFloat(fl.Field().String())
+	if err == nil {
 		return true
 	}
 
@@ -113,13 +122,4 @@ func strToFloat(s string) (float64, error) {
 	}
 
 	return v, nil
-}
-
-func validatePositionID(c *gin.Context, id string) (bool, error) {
-	_, err := strconv.Atoi(id)
-	if err == nil {
-		return true, nil
-	}
-
-	return false, NotValidPositionID
 }

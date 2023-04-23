@@ -1,8 +1,6 @@
 package usecase
 
-import (
-	"github.com/v1adhope/crypto-diary/internal/usecase/repository"
-)
+import "github.com/v1adhope/crypto-diary/internal/usecase/repository"
 
 type UseCases struct {
 	User     User

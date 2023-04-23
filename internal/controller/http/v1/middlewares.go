@@ -68,6 +68,13 @@ func errorHandler() gin.HandlerFunc {
 			}
 
 			if err.IsType(gin.ErrorTypePublic) {
+				if errors.Is(err, NotValidPositionID) {
+					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+						"error": NotValidPositionID.Error(),
+					})
+					return
+				}
+
 				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 					"error": "invalid data",
 				})
@@ -105,13 +112,6 @@ func errorHandler() gin.HandlerFunc {
 				}
 
 				//INFO: Positon
-				if errors.Is(err, NotValidPositionID) {
-					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-						"error": NotValidPositionID.Error(),
-					})
-					return
-				}
-
 				if errors.Is(err, entity.ErrNoFoundPosition) {
 					c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 						"error": entity.ErrNoFoundPosition.Error(),
@@ -125,7 +125,6 @@ func errorHandler() gin.HandlerFunc {
 					})
 					return
 				}
-
 			}
 
 			c.AbortWithStatus(http.StatusInternalServerError)

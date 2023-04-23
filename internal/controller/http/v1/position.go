@@ -100,15 +100,17 @@ func (r *positionRoutes) Delete(c *gin.Context) {
 		return
 	}
 
-	positionID := c.Query(_positionIDQueryKey)
+	dto := &dto.PositionDelete{
+		ID: c.Query(_positionIDQueryKey),
+	}
 
-	if ok, err := validatePositionID(c, positionID); !ok {
-		r.logger.Debug(err, "http/v1: Delete position: validatePositionID")
-		c.Error(err)
+	if err := r.validate.Struct(dto); err != nil {
+		r.logger.Debug(err, "http/v1: Delete position: Struct")
+		catchErrorPublic(c, NotValidPositionID)
 		return
 	}
 
-	if err := r.useCase.Delete(c.Request.Context(), userID, positionID); err != nil {
+	if err := r.useCase.Delete(c.Request.Context(), userID, dto.ID); err != nil {
 		r.logger.Debug(err, "http/v1: Delete position: Delete")
 		c.Error(err)
 		return

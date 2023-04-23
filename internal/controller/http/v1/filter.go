@@ -24,34 +24,29 @@ func getPaginationCursor(c *gin.Context) int {
 	return pc
 }
 
-type Field struct {
-	Operation string
-	Values    []string
-}
+func getValidMapFields(c *gin.Context) entity.Fields {
+	fields := make(entity.Fields)
 
-func getValidMapFields(c *gin.Context) map[string]entity.Field {
-	queryValByQueryKey := make(map[string]entity.Field)
-
-	queryVal, err := getAndValidateDate(c.Query(entity.FilterDate))
+	field, err := getValidDate(c.Query(entity.FilterDate))
 	if err == nil {
-		queryValByQueryKey[entity.FilterDate] = queryVal
+		fields[entity.FilterDate] = field
 	}
 
-	queryVal, err = getAndValidatePair(c.Query(entity.FilterPair))
+	field, err = getValidPair(c.Query(entity.FilterPair))
 	if err == nil {
-		queryValByQueryKey[entity.FilterPair] = queryVal
+		fields[entity.FilterPair] = field
 	}
 
-	queryVal, err = getAndValidateStrategically(c.Query(entity.FilterStrategically))
+	field, err = getValidStrategically(c.Query(entity.FilterStrategically))
 	if err == nil {
-		queryValByQueryKey[entity.FilterStrategically] = queryVal
+		fields[entity.FilterStrategically] = field
 	}
 
-	return queryValByQueryKey
+	return fields
 }
 
 // INFO: Shadow errors, used for debug
-func getAndValidateDate(target string) (entity.Field, error) {
+func getValidDate(target string) (entity.Field, error) {
 	if strings.Index(target, ":") == -1 {
 		if ok := validateDate(target); !ok {
 			return entity.Field{}, NotValidDate
@@ -83,7 +78,7 @@ func validateDate(target string) bool {
 	return false
 }
 
-func getAndValidatePair(target string) (entity.Field, error) {
+func getValidPair(target string) (entity.Field, error) {
 	if strings.Index(target, ",") == -1 {
 		if ok := validatePair(target); !ok {
 			return entity.Field{}, NotValidPair
@@ -114,11 +109,18 @@ func validatePair(target string) bool {
 	return false
 }
 
-func getAndValidateStrategically(target string) (entity.Field, error) {
-	_, err := strconv.ParseBool(target)
-	if err != nil {
+func getValidStrategically(target string) (entity.Field, error) {
+	if ok := validateStrategically(target); !ok {
 		return entity.Field{}, NotValidStrategically
 	}
 
 	return entity.Field{entity.OpEq, []string{target}}, nil
+}
+
+func validateStrategically(target string) bool {
+	if _, err := strconv.ParseBool(target); err != nil {
+		return true
+	}
+
+	return false
 }

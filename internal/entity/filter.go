@@ -6,9 +6,11 @@ type (
 		Values    []string
 	}
 
+	Fields map[string]Field
+
 	Filter struct {
 		PaginationCursor int
-		Fields           map[string]Field
+		Fields           Fields
 	}
 )
 
