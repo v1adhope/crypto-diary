@@ -50,12 +50,12 @@ func (pr *PositionRepo) Create(ctx context.Context, position *entity.Position) e
 		Suffix("RETURNING position_id").
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("repository: Create position: Query builder: %s", err)
+		return fmt.Errorf("repository: Create position: Query builder: %w", err)
 	}
 
 	err = pr.Pool.QueryRow(ctx, sql, args...).Scan(&position.ID)
 	if err != nil {
-		return fmt.Errorf("repository: Create position: QueryRow: %s", err)
+		return fmt.Errorf("repository: Create position: QueryRow: %w", err)
 	}
 
 	return nil
@@ -70,14 +70,18 @@ func nullCheck(s string) *string {
 }
 
 func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entity.Filter) ([]entity.Position, error) {
-
 	q := pr.Builder.Select("*").
 		From("get_all_positions").
 		Where("user_id = ? AND position_id > ?", userID, filter.PaginationCursor)
 
-	for fieldKey, fieldVal := range filter.Fields {
+	for fieldKey, field := range filter.Fields {
 		if realFilterName, ok := allowedFilters.Load(fieldKey); ok {
-			q = q.Where(fmt.Sprintf("%s = ?", realFilterName.(string)), fieldVal)
+			switch field.Operation {
+			case entity.OpEq:
+				q = q.Where(fmt.Sprintf("%s IN (?)", realFilterName.(string)), fmt.Sprint(strings.Join(field.Values, ",")))
+			case entity.OpRange:
+				q = q.Where(fmt.Sprintf("%s BETWEEN SYMMETRIC ? AND ?", realFilterName.(string)), field.Values[0], field.Values[1])
+			}
 		}
 	}
 
@@ -85,12 +89,12 @@ func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entit
 		Limit(_defaultEntityCap).
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("repository: FindAll position: Query builder: %s", err)
+		return nil, fmt.Errorf("repository: FindAll position: Query builder: %w", err)
 	}
 
 	rows, err := pr.Pool.Query(ctx, sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("repository: FindAll position: Query: %s", err)
+		return nil, fmt.Errorf("repository: FindAll position: Query: %w", err)
 	}
 	defer rows.Close()
 
@@ -128,12 +132,12 @@ func (pr *PositionRepo) Delete(ctx context.Context, userID, positionID string) e
 		Where("user_id = ? AND position_id = ?", userID, positionID).
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("repository: Delete position: Query builder: %s", err)
+		return fmt.Errorf("repository: Delete position: Query builder: %w", err)
 	}
 
 	commandTag, err := pr.Pool.Exec(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("repository: Delete positon: Exec: %s", err)
+		return fmt.Errorf("repository: Delete positon: Exec: %w", err)
 	}
 
 	if commandTag.RowsAffected() != 1 {
@@ -159,7 +163,7 @@ func (pr *PositionRepo) Replace(ctx context.Context, position *entity.Position) 
 		Where("user_id = ? AND position_id = ?", position.UserID, position.ID).
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("repository: Replace position: Query builder: %s", err)
+		return fmt.Errorf("repository: Replace position: Query builder: %w", err)
 	}
 
 	commandTag, err := pr.Pool.Exec(ctx, sql, args...)

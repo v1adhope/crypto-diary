@@ -11,6 +11,8 @@ var (
 	NotValidPair          = errors.New("not valid pair")
 	NotValidStrategically = errors.New("not valid strategically")
 
+	QueryOverflow = errors.New("max 255 sim per field")
+
 	NotValidPositionID = errors.New("invalid id")
 )
 

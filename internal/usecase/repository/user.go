@@ -1,3 +1,4 @@
+// TODO: Outside Dependencies
 package repository
 
 import (
@@ -26,7 +27,7 @@ func (ur *UserRepo) Create(ctx context.Context, user entity.User) error {
 		Values(user.Email, user.Password).
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("repository: Create user: Query builder: %s", err)
+		return fmt.Errorf("repository: Create user: Query builder: %w", err)
 	}
 
 	_, err = ur.Pool.Exec(ctx, sql, args...)
@@ -37,8 +38,6 @@ func (ur *UserRepo) Create(ctx context.Context, user entity.User) error {
 			if pgErr.Code == pgerrcode.UniqueViolation {
 				return entity.ErrUserAlreadyExists
 			}
-
-			return fmt.Errorf("repository: Create user: QyeryRow: PgErr: %s, %s", pgErr.Code, pgErr.Message)
 		}
 
 		return fmt.Errorf("repository: Create user: QueryRow: %w", err)
@@ -53,7 +52,7 @@ func (ur *UserRepo) Get(ctx context.Context, email string) (*entity.User, error)
 		Where("email = ?", email).
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("repository: Create user: Query builder: %s", err)
+		return nil, fmt.Errorf("repository: Create user: Query builder: %w", err)
 	}
 
 	u := &entity.User{}

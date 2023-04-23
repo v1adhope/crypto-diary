@@ -68,6 +68,7 @@ func (r *userRoutes) signIn(c *gin.Context) {
 
 	refreshToken, accessToken, err := r.useCase.SignIn(c.Request.Context(), request.Email, request.Password)
 	if err != nil {
+		r.logger.Debug(err, "http/v1: signIn: SignIn")
 		c.Error(err)
 		return
 	}

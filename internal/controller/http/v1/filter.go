@@ -1,7 +1,10 @@
+// TODO: Strong dependency on entity
 package v1
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,8 +24,13 @@ func getPaginationCursor(c *gin.Context) int {
 	return pc
 }
 
-func getValidMapFields(c *gin.Context) map[string]string {
-	queryValByQueryKey := make(map[string]string)
+type Field struct {
+	Operation string
+	Values    []string
+}
+
+func getValidMapFields(c *gin.Context) map[string]entity.Field {
+	queryValByQueryKey := make(map[string]entity.Field)
 
 	queryVal, err := getAndValidateDate(c.Query(entity.FilterDate))
 	if err == nil {
@@ -43,28 +51,74 @@ func getValidMapFields(c *gin.Context) map[string]string {
 }
 
 // INFO: Shadow errors, used for debug
-func getAndValidateDate(target string) (string, error) {
+func getAndValidateDate(target string) (entity.Field, error) {
+	if strings.Index(target, ":") == -1 {
+		if ok := validateDate(target); !ok {
+			return entity.Field{}, NotValidDate
+		}
+
+		return entity.Field{entity.OpEq, []string{target}}, nil
+	}
+
+	values := strings.Split(target, ":")
+	if len(values) != 2 {
+		return entity.Field{}, NotValidDate
+	}
+
+	for _, v := range values {
+		if ok := validateDate(v); !ok {
+			return entity.Field{}, NotValidDate
+		}
+	}
+
+	return entity.Field{entity.OpRange, values}, nil
+}
+
+func validateDate(target string) bool {
 	_, err := time.Parse(time.DateOnly, target)
-	if err != nil {
-		return "", NotValidDate
+	if err == nil {
+		return true
 	}
 
-	return target, nil
+	return false
 }
 
-func getAndValidatePair(target string) (string, error) {
-	if tl := len(target); tl > 12 || tl == 0 {
-		return "", NotValidPair
+func getAndValidatePair(target string) (entity.Field, error) {
+	if strings.Index(target, ",") == -1 {
+		if ok := validatePair(target); !ok {
+			return entity.Field{}, NotValidPair
+		}
+
+		return entity.Field{entity.OpEq, []string{target}}, nil
 	}
 
-	return target, nil
+	values := strings.Split(target, ",")
+	if len(values) < 255 {
+		return entity.Field{}, fmt.Errorf("pair: %w", QueryOverflow)
+	}
+
+	for _, v := range values {
+		if ok := validatePair(v); !ok {
+			return entity.Field{}, NotValidPair
+		}
+	}
+
+	return entity.Field{entity.OpEq, values}, nil
 }
 
-func getAndValidateStrategically(target string) (string, error) {
+func validatePair(target string) bool {
+	if tl := len(target); tl <= 12 && tl > 0 {
+		return true
+	}
+
+	return false
+}
+
+func getAndValidateStrategically(target string) (entity.Field, error) {
 	_, err := strconv.ParseBool(target)
 	if err != nil {
-		return "", NotValidStrategically
+		return entity.Field{}, NotValidStrategically
 	}
 
-	return target, nil
+	return entity.Field{entity.OpEq, []string{target}}, nil
 }
