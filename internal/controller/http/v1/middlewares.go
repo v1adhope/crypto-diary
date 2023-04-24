@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	_userCtxKey = "userID"
+	ctxKeyUser = "userID"
 )
 
 type authMiddleware interface {
@@ -18,7 +18,7 @@ type authMiddleware interface {
 }
 
 func (r *Router) tokenHandler() gin.HandlerFunc {
-	const _bearerSchema = "Bearer"
+	const bearerSchema = "Bearer"
 
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
@@ -28,7 +28,7 @@ func (r *Router) tokenHandler() gin.HandlerFunc {
 		}
 
 		clientToken := strings.Split(header, " ")
-		if len(clientToken) != 2 || clientToken[0] != _bearerSchema {
+		if len(clientToken) != 2 || clientToken[0] != bearerSchema {
 			c.Error(entity.ErrTokenInvalid)
 			return
 		}
@@ -40,14 +40,14 @@ func (r *Router) tokenHandler() gin.HandlerFunc {
 			return
 		}
 
-		c.Set(_userCtxKey, id)
+		c.Set(ctxKeyUser, id)
 
 		c.Next()
 	}
 }
 
 func getUserID(c *gin.Context) (string, error) {
-	userID := c.GetString(_userCtxKey)
+	userID := c.GetString(ctxKeyUser)
 	if userID == "" {
 		return "", entity.ErrTokenInvalid
 	}

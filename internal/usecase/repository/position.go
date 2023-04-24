@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	_defaultEntityCap = 25
+	defaultEntityCap = 25
 )
 
 type PositionRepo struct {
@@ -78,7 +78,8 @@ func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entit
 		if realFilterName, ok := allowedFilters.Load(fieldKey); ok {
 			switch field.Operation {
 			case entity.OpEq:
-				q = q.Where(fmt.Sprintf("%s IN (?)", realFilterName.(string)), fmt.Sprint(strings.Join(field.Values, ",")))
+				fmt.Println(field.Values, len(field.Values))
+				q = q.Where(map[string]any{realFilterName.(string): field.Values})
 			case entity.OpRange:
 				q = q.Where(fmt.Sprintf("%s BETWEEN SYMMETRIC ? AND ?", realFilterName.(string)), field.Values[0], field.Values[1])
 			}
@@ -86,7 +87,7 @@ func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entit
 	}
 
 	sql, args, err := q.OrderBy("position_id ASC").
-		Limit(_defaultEntityCap).
+		Limit(defaultEntityCap).
 		ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("repository: FindAll position: Query builder: %w", err)
@@ -98,10 +99,10 @@ func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entit
 	}
 	defer rows.Close()
 
-	positions := make([]entity.Position, 0, _defaultEntityCap)
+	positions := make([]entity.Position, 0, defaultEntityCap)
 
 	for rows.Next() {
-		p := &PositionDTO{}
+		p := &positionDTO{}
 
 		err := rows.Scan(
 			&p.ID,
@@ -121,7 +122,7 @@ func (pr *PositionRepo) FindAll(ctx context.Context, userID string, filter entit
 			return nil, fmt.Errorf("repository: FindAll positon: Scan: %w", err)
 		}
 
-		positions = append(positions, *p.ToEntity())
+		positions = append(positions, p.toEntity())
 	}
 
 	return positions, nil

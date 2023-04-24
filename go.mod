@@ -11,16 +11,19 @@ require (
 	github.com/redis/go-redis/v9 v9.0.2
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/viper v1.14.0
+	github.com/stretchr/testify v1.8.2
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
 require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 )
 
 require (

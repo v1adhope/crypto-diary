@@ -25,24 +25,24 @@ func getPaginationCursor(c *gin.Context) int {
 }
 
 func getValidMapFields(c *gin.Context) entity.Fields {
-	fields := make(entity.Fields)
+	fieldByFilterName := make(entity.Fields)
 
 	field, err := getValidDate(c.Query(entity.FilterDate))
 	if err == nil {
-		fields[entity.FilterDate] = field
+		fieldByFilterName[entity.FilterDate] = field
 	}
 
 	field, err = getValidPair(c.Query(entity.FilterPair))
 	if err == nil {
-		fields[entity.FilterPair] = field
+		fieldByFilterName[entity.FilterPair] = field
 	}
 
 	field, err = getValidStrategically(c.Query(entity.FilterStrategically))
 	if err == nil {
-		fields[entity.FilterStrategically] = field
+		fieldByFilterName[entity.FilterStrategically] = field
 	}
 
-	return fields
+	return fieldByFilterName
 }
 
 // INFO: Shadow errors, used for debug
@@ -71,14 +71,18 @@ func getValidDate(target string) (entity.Field, error) {
 
 func validateDate(target string) bool {
 	_, err := time.Parse(time.DateOnly, target)
-	if err == nil {
-		return true
+	if err != nil {
+		return false
 	}
 
-	return false
+	return true
 }
 
 func getValidPair(target string) (entity.Field, error) {
+	if len(target) == 255 {
+		return entity.Field{}, fmt.Errorf("pair: %w", QueryOverflow)
+	}
+
 	if strings.Index(target, ",") == -1 {
 		if ok := validatePair(target); !ok {
 			return entity.Field{}, NotValidPair
@@ -88,8 +92,8 @@ func getValidPair(target string) (entity.Field, error) {
 	}
 
 	values := strings.Split(target, ",")
-	if len(values) < 255 {
-		return entity.Field{}, fmt.Errorf("pair: %w", QueryOverflow)
+	if len(values) == 0 {
+		return entity.Field{}, NotValidPair
 	}
 
 	for _, v := range values {
@@ -102,11 +106,11 @@ func getValidPair(target string) (entity.Field, error) {
 }
 
 func validatePair(target string) bool {
-	if tl := len(target); tl <= 12 && tl > 0 {
-		return true
+	if tl := len(target); tl > 12 || tl <= 0 {
+		return false
 	}
 
-	return false
+	return true
 }
 
 func getValidStrategically(target string) (entity.Field, error) {
@@ -119,8 +123,8 @@ func getValidStrategically(target string) (entity.Field, error) {
 
 func validateStrategically(target string) bool {
 	if _, err := strconv.ParseBool(target); err != nil {
-		return true
+		return false
 	}
 
-	return false
+	return true
 }

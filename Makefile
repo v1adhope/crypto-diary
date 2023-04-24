@@ -5,7 +5,8 @@ default: build
 build:
 	go mod tidy -v
 	go mod verify
-	go build -o .bin/app -race ./cmd/app
+	go test ./... -race
+	go build -o .bin/app ./cmd/app
 
 stop:
 	docker compose down -v

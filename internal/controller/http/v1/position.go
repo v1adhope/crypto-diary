@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	_positionIDQueryKey = "id"
+	queryKeyPositionID = "id"
 )
 
 type positionRoutes struct {
@@ -101,7 +101,7 @@ func (r *positionRoutes) Delete(c *gin.Context) {
 	}
 
 	dto := &dto.PositionDelete{
-		ID: c.Query(_positionIDQueryKey),
+		ID: c.Query(queryKeyPositionID),
 	}
 
 	if err := r.validate.Struct(dto); err != nil {

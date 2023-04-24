@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	_timeFormat = "02 Jan 06 15:04"
-	_maxSize    = 100
-	_maxAge     = 30
-	_maxBackups = 5
+	timeModel  = "02 Jan 06 15:04"
+	maxSize    = 100
+	maxAge     = 30
+	maxBackups = 5
 )
 
 type Config struct {
@@ -59,16 +59,16 @@ func New(cfg *Config) *Log {
 	if cfg.IsConsoleLogEnable {
 		writers = append(writers, zerolog.ConsoleWriter{
 			Out:        os.Stderr,
-			TimeFormat: _timeFormat,
+			TimeFormat: timeModel,
 		})
 	}
 
 	if cfg.IsFileLogEnable {
 		writers = append(writers, &lumberjack.Logger{
 			Filename:   cfg.FileName,
-			MaxSize:    _maxSize,
-			MaxAge:     _maxAge,
-			MaxBackups: _maxBackups,
+			MaxSize:    maxSize,
+			MaxAge:     maxAge,
+			MaxBackups: maxBackups,
 			Compress:   cfg.IsCompress,
 		})
 	}

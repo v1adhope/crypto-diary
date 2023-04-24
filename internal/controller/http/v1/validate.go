@@ -85,32 +85,39 @@ func validatePosition(sl validator.StructLevel) {
 		sl.ReportError(p.OpenPrice, "OpenPrice", "", "", "")
 	}
 
+	reportStopLoss := func() {
+		sl.ReportError(p.StopLossPrice, "StopLossPrice", "", "", "")
+	}
+	reportTakeProfit := func() {
+		sl.ReportError(p.TakeProfitPrice, "TakeProfitPrice", "", "", "")
+	}
+
 	stopLossPrice, err := strToFloat(p.StopLossPrice)
 	if err != nil || stopLossPrice < 0 {
-		sl.ReportError(p.StopLossPrice, "StopLossPrice", "", "", "")
+		reportStopLoss()
 	}
 
 	takeProfitPrice, err := strToFloat(p.TakeProfitPrice)
 	if err != nil || takeProfitPrice < 0 {
-		sl.ReportError(p.TakeProfitPrice, "TakeProfitPrice", "", "", "")
+		reportTakeProfit()
 	}
 
 	switch p.Direction {
 	case "long":
 		if stopLossPrice > openPrice {
-			sl.ReportError(p.StopLossPrice, "StopLossPrice", "", "", "")
+			reportStopLoss()
 		}
 
 		if takeProfitPrice < openPrice {
-			sl.ReportError(p.TakeProfitPrice, "TakeProfitPrice", "", "", "")
+			reportTakeProfit()
 		}
 	case "short":
 		if stopLossPrice < openPrice {
-			sl.ReportError(p.StopLossPrice, "StopLossPrice", "", "", "")
+			reportStopLoss()
 		}
 
 		if takeProfitPrice > openPrice {
-			sl.ReportError(p.TakeProfitPrice, "TakeProfitPrice", "", "", "")
+			reportTakeProfit()
 		}
 	}
 }

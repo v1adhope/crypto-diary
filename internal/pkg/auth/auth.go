@@ -10,17 +10,16 @@ import (
 )
 
 type Config struct {
-	SecretKey            string        `mapstructure:"secret_key"`
-	Issuer               string        `mapstructure:"issuer"`
-	RefreshTokenLifetime time.Duration `mapstructure:"refresh_token_lifetime"`
-	RefreshTokenSecret   string        `mapstructure:"refresh_token_secret"`
-	AccessTokenLifetime  time.Duration `mapstructure:"access_token_lifetime"`
-	AccessTokenSecret    string        `mapstructure:"access_token_secret"`
+	Issuer             string        `mapstructure:"issuer"`
+	RefreshTokenTTL    time.Duration `mapstructure:"refresh_token_ttl"`
+	RefreshTokenSecret string        `mapstructure:"refresh_token_secret"`
+	AccessTokenTTL     time.Duration `mapstructure:"access_token_ttl"`
+	AccessTokenSecret  string        `mapstructure:"access_token_secret"`
 }
 
 const (
-	_kidRefreshToken = "refresh"
-	_kidAccessToken  = "access"
+	kidRefreshToken = "refresh"
+	kidAccessToken  = "access"
 )
 
 type AuthManager interface {
@@ -29,7 +28,7 @@ type AuthManager interface {
 	ValidateRefreshToken(clientToken string) (string, time.Duration, error)
 }
 
-type Manager struct {
+type manager struct {
 	issuer               string
 	refreshTokenLifetime time.Duration
 	refreshTokenSecret   string
@@ -37,17 +36,17 @@ type Manager struct {
 	accessTokenSecret    string
 }
 
-func New(cfg *Config) *Manager {
-	return &Manager{
+func New(cfg *Config) *manager {
+	return &manager{
 		issuer:               cfg.Issuer,
-		refreshTokenLifetime: cfg.RefreshTokenLifetime,
+		refreshTokenLifetime: cfg.RefreshTokenTTL,
 		refreshTokenSecret:   cfg.RefreshTokenSecret,
-		accessTokenLifetime:  cfg.AccessTokenLifetime,
+		accessTokenLifetime:  cfg.AccessTokenTTL,
 		accessTokenSecret:    cfg.AccessTokenSecret,
 	}
 }
 
-func (m *Manager) GenerateTokenPair(id string) (string, string, error) {
+func (m *manager) GenerateTokenPair(id string) (string, string, error) {
 	refreshToken, err := m.generateRefreshToken(id)
 	if err != nil {
 		return "", "", err
@@ -61,7 +60,7 @@ func (m *Manager) GenerateTokenPair(id string) (string, string, error) {
 	return refreshToken, accessToken, nil
 }
 
-func (m *Manager) generateRefreshToken(id string) (string, error) {
+func (m *manager) generateRefreshToken(id string) (string, error) {
 	claims := &jwt.RegisteredClaims{
 		Subject:   id,
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.refreshTokenLifetime)),
@@ -70,7 +69,7 @@ func (m *Manager) generateRefreshToken(id string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token.Header["kid"] = _kidRefreshToken
+	token.Header["kid"] = kidRefreshToken
 
 	signedToken, err := token.SignedString([]byte(m.refreshTokenSecret))
 	if err != nil {
@@ -80,7 +79,7 @@ func (m *Manager) generateRefreshToken(id string) (string, error) {
 	return signedToken, nil
 }
 
-func (m *Manager) generateAccessToken(id string) (string, error) {
+func (m *manager) generateAccessToken(id string) (string, error) {
 	claims := &jwt.RegisteredClaims{
 		Subject:   id,
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.accessTokenLifetime)),
@@ -89,7 +88,7 @@ func (m *Manager) generateAccessToken(id string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token.Header["kid"] = _kidAccessToken
+	token.Header["kid"] = kidAccessToken
 
 	signedToken, err := token.SignedString([]byte(m.accessTokenSecret))
 	if err != nil {
@@ -99,7 +98,7 @@ func (m *Manager) generateAccessToken(id string) (string, error) {
 	return signedToken, nil
 }
 
-func (m *Manager) ValidateRefreshToken(clientToken string) (string, time.Duration, error) {
+func (m *manager) ValidateRefreshToken(clientToken string) (string, time.Duration, error) {
 	token, err := jwt.Parse(clientToken, func(token *jwt.Token) (interface{}, error) {
 
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -112,7 +111,7 @@ func (m *Manager) ValidateRefreshToken(clientToken string) (string, time.Duratio
 		return "", 0, fmt.Errorf("%w: parse failed: %s", entity.ErrTokenInvalid, err)
 	}
 
-	if !token.Valid || token.Header["kid"] != _kidRefreshToken {
+	if !token.Valid || token.Header["kid"] != kidRefreshToken {
 		return "", 0, entity.ErrTokenInvalid
 	}
 
@@ -124,7 +123,7 @@ func (m *Manager) ValidateRefreshToken(clientToken string) (string, time.Duratio
 	return id, m.refreshTokenLifetime, nil
 }
 
-func (m *Manager) ValidateAccessToken(clientToken string) (string, error) {
+func (m *manager) ValidateAccessToken(clientToken string) (string, error) {
 	token, err := jwt.Parse(clientToken, func(token *jwt.Token) (interface{}, error) {
 
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -137,7 +136,7 @@ func (m *Manager) ValidateAccessToken(clientToken string) (string, error) {
 		return "", fmt.Errorf("parse failed: %w", err)
 	}
 
-	if !token.Valid || token.Header["kid"] != _kidAccessToken {
+	if !token.Valid || token.Header["kid"] != kidAccessToken {
 		return "", errors.New("invalid token")
 	}
 
@@ -149,7 +148,7 @@ func (m *Manager) ValidateAccessToken(clientToken string) (string, error) {
 	return id, nil
 }
 
-func (m *Manager) extractClaimField(token *jwt.Token, key string) (string, error) {
+func (m *manager) extractClaimField(token *jwt.Token, key string) (string, error) {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		switch claim := claims[key].(type) {
 		default:

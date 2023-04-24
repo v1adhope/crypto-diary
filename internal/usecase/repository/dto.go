@@ -7,9 +7,9 @@ import (
 	"github.com/v1adhope/crypto-diary/internal/entity"
 )
 
-const _timeModel = "2006-01-02"
+const timeModel = "2006-01-02"
 
-type PositionDTO struct {
+type positionDTO struct {
 	ID              string
 	OpenDate        pgtype.Date
 	Pair            string
@@ -25,14 +25,14 @@ type PositionDTO struct {
 	UserID          string
 }
 
-func (pd *PositionDTO) ToEntity() *entity.Position {
-	opendate := pd.OpenDate.Time.Format(_timeModel)
+func (pd *positionDTO) toEntity() entity.Position {
+	opendate := pd.OpenDate.Time.Format(timeModel)
 	strategically := strconv.FormatBool(pd.Strategically)
 
 	reason := nullTextCheck(&pd.Reason)
 	closePrice := nullTextCheck(&pd.ClosePrice)
 
-	return &entity.Position{
+	return entity.Position{
 		ID:              pd.ID,
 		OpenDate:        opendate,
 		Pair:            pd.Pair,

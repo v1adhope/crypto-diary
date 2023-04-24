@@ -1,4 +1,4 @@
-# gin_mode: release
+gin_mode: debug
 
 logger:
   log_level: debug
@@ -15,9 +15,9 @@ server:
 
 auth:
   issuer: crypto-diary.space
-  refresh_token_lifetime: 168h
+  refresh_token_ttl: 168h
   refresh_token_secret: 7PFUSSxFjeVkbxqAn5ktapVE2PvbQgTgzsrztktawFbYK2TubTkp4JvgjpHP3Taa
-  access_token_lifetime: 15m
+  access_token_ttl: 15m
   access_token_secret: KycVkWHPDygdJFgerbHjr7v7erWF2NA7uxEkgTaeQLgqS2939XjmcVJUQfKEApkS
 
 session_storage:
