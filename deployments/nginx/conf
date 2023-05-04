@@ -1,0 +1,16 @@
+# SSL WITH LETSENCRYPT CERTBOT
+
+server {
+        server_name crypto-diary.space www.crypto-diary.space;
+
+        location /api/ {
+                proxy_pass http://localhost:8081/;
+                add_header cache-control no-transform always;
+        }
+
+        location / {
+                return 301 https://app.swaggerhub.com/apis-docs/v1adhope/crypto-diary/0.5.0;
+                access_log off;
+                add_header cache-control no-transform always;
+        }
+}
